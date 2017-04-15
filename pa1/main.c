@@ -8,8 +8,7 @@ static struct argp_option options[] = {
     {0}
 };
 
-static error_t parse_opt (int key, char *arg, struct argp_state *state)
-{
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     int *argument = state->input;
     switch (key)
     {
@@ -24,12 +23,11 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 
 static struct argp argp = { options, parse_opt, 0, doc };
 
-int main (int argc, char **argv)
-{
-  int process_count = 0;
-  argp_parse (&argp, argc, argv, 0, 0, &process_count);
+int main (int argc, char **argv) {
+    int process_count = 0;
+    argp_parse (&argp, argc, argv, 0, 0, &process_count);
 
-  printf ("process_count = %d\n", process_count);
+    printf ("process_count = %d\n", process_count);
 
-  exit (0);
+    exit (0);
 }
