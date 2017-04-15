@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include <argp.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include "pa1.h"
 
 static char doc[] = "ITMO Distributed Computing programming assignment #1";
 
@@ -27,7 +31,21 @@ int main (int argc, char **argv) {
     int process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
 
-    printf ("process_count = %d\n", process_count);
+    int id = 0;
+    for (size_t i = 1; i <= process_count; i++) {
+        if (id == 0) {
+            int pid = fork();
+            if (pid == 0) {
+                id = i;
+                printf(log_started_fmt, (int)id, getpid(), getppid());
+                sleep(5);
+            }
+        }
+    }
+
+    for (size_t i = 0; i < process_count; i++) {
+        wait(NULL);
+    }
 
     exit (0);
 }
