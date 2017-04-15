@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <argp.h>
 
-static char doc[] = "ITMO Distributed Computation programming assignment #1";
+static char doc[] = "ITMO Distributed Computing programming assignment #1";
 
 static struct argp_option options[] = {
     {0, 'p', "PROCESS_COUNT", 0, "Number of child processes" },
