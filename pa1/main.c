@@ -4,7 +4,10 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <sys/types.h>
+
 #include "pa1.h"
+#include "ipc.h"
 
 static char doc[] = "ITMO Distributed Computing programming assignment #1";
 
@@ -14,11 +17,14 @@ static struct argp_option options[] = {
 };
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
-    int *argument = state->input;
+    local_id *argument = state->input;
     switch (key)
     {
     case 'p':
         *argument = atoi(arg);
+        if (*argument < 0 || *argument > MAX_PROCESS_ID){
+            argp_failure(state, 1, 0,"PROCESS_COUNT must be between 0 and %d",MAX_PROCESS_ID);
+        }
         break;
     default:
         return ARGP_ERR_UNKNOWN;
@@ -29,53 +35,49 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, 0, doc };
 
 int main (int argc, char **argv) {
-    int process_count = 0;
+    local_id process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
-
-    int fd_read[1024];
-    int fd_writ[1024];
-    for (size_t i = 0; i <= process_count; i++) {
+    process_count++;
+    
+    int fd_read[MAX_PROCESS_ID];
+    int fd_writ[MAX_PROCESS_ID];
+    for (local_id i = 0; i <= process_count; i++) {
         int fd[2];
         pipe(fd);
         fd_read[i] = fd[0];
         fd_writ[i] = fd[1];
     }
-    int id = 0;
-    for (size_t i = 1; i <= process_count; i++) {
+    local_id id = 0;
+    for (local_id i = 1; i <= process_count; i++) {
         if (id == 0) {
-            int pid = fork();
+            pid_t pid = fork();
             if (pid == 0) {
                 id = i;
-                printf(log_started_fmt, (int)id, getpid(), getppid());
+                printf(log_started_fmt, id, getpid(), getppid());
             }
         }
     }
 
     close(fd_writ[id]);
-    for (size_t i = 0; i <= process_count; i++) {
+    for (local_id i = 0; i <= process_count; i++) {
         if (i != id) {
             close(fd_read[i]);
         }
     }
-    char    string[1];
-    string[0] = id;
-    char    readbuffer[80];
-    int nbytes;
-    for (size_t i = 0; i <= process_count; i++) {
-        if (i == id) {
-            continue;
+    for (local_id i = 0; i <= process_count; i++) {
+        if (i != id) {
+            write(fd_writ[i], &id, sizeof(local_id));
+            printf("P %d sent to: %d\n", id, i);
         }
-        write(fd_writ[i], string, 1);
-        printf("P %d sent to: %d\n", id,(int)i);
     }
-    for (size_t i = 0; i < process_count; i++) {
-        nbytes = read(fd_read[id], readbuffer, 1);
-        int id_r = readbuffer[0];
-        printf("P %d received from: %d\n", id,id_r);
+    for (local_id i = 0; i < process_count; i++) {
+        local_id id_r;
+        read(fd_read[id], &id_r, sizeof(local_id));
+        printf("P %d received from: %d\n", id, id_r);
     }
     if (id == 0){
         while( wait(NULL) > 0 );
     }
     printf("P %d quit\n", id);
-    exit (0);
+    exit (EXIT_SUCCESS);
 }
