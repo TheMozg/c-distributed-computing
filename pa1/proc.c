@@ -1,9 +1,7 @@
-#include <stdio.h> // Won't be needed after logger
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "proc.h"
-#include "ipc.h"
-#include "pa1.h" // Won't be needed after logger
 #include "logger.h"
 
 int close_pipe ( local_id id, int fd ) {

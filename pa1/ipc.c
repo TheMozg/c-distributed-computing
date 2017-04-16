@@ -1,7 +1,8 @@
-#include "ipc.h"
-#include "proc.h"
 #include <unistd.h>
 #include <stdio.h>
+
+#include "ipc.h"
+#include "proc.h"
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE -1

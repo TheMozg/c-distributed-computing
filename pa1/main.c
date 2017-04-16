@@ -1,10 +1,8 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <unistd.h>
-//#include <errno.h>
 #include <string.h>
 #include <sys/wait.h>
-//#include <sys/types.h>
 
 #include "ipc.h"
 #include "proc.h"
@@ -34,8 +32,6 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 }
 
 static struct argp argp = { options, parse_opt, 0, doc };
-
-extern int log_fd;
 
 int main (int argc, char **argv) {
     start_log();
