@@ -4,12 +4,9 @@
 #include "ipc.h"
 #include "proc.h"
 
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE -1
-
 int send(void * self, local_id dst, const Message * msg) {
     proc_t * proc = self;
-    return ( write(proc->fd_writ[dst], msg, sizeof(Message)) < 0 ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return ( write(proc->fd_writ[dst], msg, sizeof(Message)) < 0 ) ? 0 : -1;
 }
 
 int send_multicast(void * self, const Message * msg) {
