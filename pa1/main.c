@@ -3,9 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
-#include <string.h>
 #include <sys/types.h>
-
 #include "pa1.h"
 #include "ipc.h"
 
@@ -35,21 +33,27 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, 0, doc };
 
 int main (int argc, char **argv) {
+    // Get number of child processes
     local_id process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
+    // Increment to get total number of processes
     process_count++;
-    
-    int fd_read[MAX_PROCESS_ID];
-    int fd_writ[MAX_PROCESS_ID];
-    for (local_id i = 0; i <= process_count; i++) {
+
+    // Init file descriptors
+    int fd_read[process_count];
+    int fd_writ[process_count];
+    for (local_id i = 0; i < process_count; i++) {
         int fd[2];
         pipe(fd);
         fd_read[i] = fd[0];
         fd_writ[i] = fd[1];
     }
-    local_id id = 0;
-    for (local_id i = 1; i <= process_count; i++) {
-        if (id == 0) {
+
+    // PARENT_ID does not have to be 0
+    local_id id = PARENT_ID;
+    // Spawn child processes
+    for (local_id i = 0; i < process_count; i++) {
+        if (i != PARENT_ID && id == PARENT_ID) {
             pid_t pid = fork();
             if (pid == 0) {
                 id = i;
@@ -58,26 +62,36 @@ int main (int argc, char **argv) {
         }
     }
 
+    // Close write fd of current process since it does not message itself
     close(fd_writ[id]);
-    for (local_id i = 0; i <= process_count; i++) {
+    // Close read fd of all other processes. Read messages only for this process
+    for (local_id i = 0; i < process_count; i++) {
         if (i != id) {
             close(fd_read[i]);
         }
     }
-    for (local_id i = 0; i <= process_count; i++) {
+
+    // Send messages to all other processes
+    for (local_id i = 0; i < process_count; i++) {
         if (i != id) {
             write(fd_writ[i], &id, sizeof(local_id));
             printf("P %d sent to: %d\n", id, i);
         }
     }
-    for (local_id i = 0; i < process_count; i++) {
+
+    // Wait for messages from all other processes
+    for (local_id i = 0; i < process_count - 1; i++) {
         local_id id_r;
         read(fd_read[id], &id_r, sizeof(local_id));
         printf("P %d received from: %d\n", id, id_r);
     }
-    if (id == 0){
+
+    // Wait for children
+    if (id == PARENT_ID){
         while( wait(NULL) > 0 );
     }
+
+    // Exit
     printf("P %d quit\n", id);
     exit (EXIT_SUCCESS);
 }
