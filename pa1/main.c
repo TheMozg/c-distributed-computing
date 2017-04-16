@@ -63,6 +63,10 @@ int main (int argc, char **argv) {
     // Wait for children
     if (id == PARENT_ID){
         while( wait(NULL) > 0 );
+        for ( int i = 0; i < process_count; i++ ) {
+            close(this_process.fd_read[i]); 
+            close(this_process.fd_writ[i]); 
+        }
     }
 
     // Exit
