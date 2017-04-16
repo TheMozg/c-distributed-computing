@@ -5,9 +5,10 @@
 #include <string.h>
 #include <sys/wait.h>
 //#include <sys/types.h>
-#include "pa1.h"
+
 #include "ipc.h"
 #include "proc.h"
+#include "logger.h"
 
 static char doc[] = "ITMO Distributed Computing programming assignment #1";
 
@@ -34,7 +35,10 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 
 static struct argp argp = { options, parse_opt, 0, doc };
 
+extern int log_fd;
+
 int main (int argc, char **argv) {
+    start_log();
     // Get number of child processes
     local_id process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
@@ -61,19 +65,17 @@ int main (int argc, char **argv) {
         receive_any(&this_process, &msg);
         local_id id_r;
         memcpy(&id_r, msg.s_payload, msg.s_header.s_payload_len);
-        printf("P %d received from: %d\n", this_process.id, id_r);
+        log_output(fd_event, "P %d received from: %d\n", this_process.id, id_r);
     }
 
     // Wait for children
     if (id == PARENT_ID){
         while( wait(NULL) > 0 );
-        for ( int i = 0; i < process_count; i++ ) {
-            close(this_process.fd_read[i]); 
-            close(this_process.fd_writ[i]); 
-        }
+        close_all_pipes(&this_process);
     }
 
     // Exit
-    printf("P %d quit\n", id);
+    log_output(fd_event, "P %d quit\n", id);
+    close_log();
     exit (EXIT_SUCCESS);
 }

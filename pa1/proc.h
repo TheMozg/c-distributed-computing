@@ -12,4 +12,10 @@ typedef struct {
 } proc_t;
 
 local_id spawn_procs ( proc_t* parent_proc, int process_count );
+
+int close_pipe ( local_id id, int fd );
+
+int create_pipe ( local_id id, int* fd );
+
+void close_all_pipes ( proc_t* self );
 #endif // _PROC_H_
