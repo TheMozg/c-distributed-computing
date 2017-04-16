@@ -2,6 +2,7 @@
 #include <argp.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include "pa1.h"
@@ -48,15 +49,22 @@ int main (int argc, char **argv) {
     // Send messages to all other processes
     for (local_id i = 0; i < process_count; i++) {
         if (i != id) {
-            write(this_process.fd_writ[i], &id, sizeof(local_id));
+            Message msg;
+            msg.s_header.s_magic = MESSAGE_MAGIC;
+            msg.s_header.s_payload_len = sizeof(local_id);
+            msg.s_header.s_type = STARTED;
+            memcpy(&(msg.s_payload), &id, sizeof(local_id));
+            write(this_process.fd_writ[i], &msg, sizeof(Message));
             printf("P %d sent to: %d\n", this_process.id, i);
         }
     }
 
     // Wait for messages from all other processes
     for (local_id i = 0; i < process_count - 1; i++) {
+        Message msg;
+        read(this_process.fd_read[id], &msg, sizeof(Message));
         local_id id_r;
-        read(this_process.fd_read[id], &id_r, sizeof(local_id));
+        memcpy(&id_r, msg.s_payload, msg.s_header.s_payload_len);
         printf("P %d received from: %d\n", this_process.id, id_r);
     }
 
