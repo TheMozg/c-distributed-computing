@@ -11,6 +11,7 @@ local_id spawn_procs ( proc_t* proc, int process_count ) {
     proc->fd_read = malloc( sizeof(int) * process_count );
     proc->fd_writ = malloc( sizeof(int) * process_count );
     proc->id = PARENT_ID;
+    proc->process_count = process_count;
 
     for ( local_id i = 0; i < process_count; i++ ) {
         int fd[2];

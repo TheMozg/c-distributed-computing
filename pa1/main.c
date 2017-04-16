@@ -47,17 +47,12 @@ int main (int argc, char **argv) {
     local_id id = spawn_procs( &this_process, process_count );
 
     // Send messages to all other processes
-    for (local_id i = 0; i < process_count; i++) {
-        if (i != id) {
-            Message msg;
-            msg.s_header.s_magic = MESSAGE_MAGIC;
-            msg.s_header.s_payload_len = sizeof(local_id);
-            msg.s_header.s_type = STARTED;
-            memcpy(&(msg.s_payload), &id, sizeof(local_id));
-            send(&this_process, i, &msg);
-            printf("P %d sent to: %d\n", this_process.id, i);
-        }
-    }
+    Message msg;
+    msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_payload_len = sizeof(local_id);
+    msg.s_header.s_type = STARTED;
+    memcpy(&(msg.s_payload), &id, sizeof(local_id));
+    send_multicast(&this_process, &msg);
 
     // Wait for messages from all other processes
     for (local_id i = 0; i < process_count - 1; i++) {

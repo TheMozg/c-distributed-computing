@@ -6,6 +6,7 @@
 
 typedef struct {
     local_id  id;
+    uint8_t    process_count;
     int       *fd_read;
     int       *fd_writ;
 } proc_t;
