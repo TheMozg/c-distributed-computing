@@ -73,7 +73,9 @@ int main (int argc, char **argv) {
         int id_r = readbuffer[0];
         printf("P %d received from: %d\n", id,id_r);
     }
-    while( wait(NULL) > 0 );
+    if (id == 0){
+        while( wait(NULL) > 0 );
+    }
     printf("P %d quit\n", id);
     exit (0);
 }
