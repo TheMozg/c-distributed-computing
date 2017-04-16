@@ -43,9 +43,7 @@ int main (int argc, char **argv) {
         }
     }
 
-    for (size_t i = 0; i < process_count; i++) {
-        wait(NULL);
-    }
+    while( wait(NULL) > 0 );
 
     exit (0);
 }
