@@ -57,20 +57,20 @@ int main (int argc, char **argv) {
             close(fd_read[i]);
         }
     }
-    char    string[] = "P_\n";
-    string[1] = id;
+    char    string[1];
+    string[0] = id;
     char    readbuffer[80];
     int nbytes;
     for (size_t i = 0; i <= process_count; i++) {
         if (i == id) {
             continue;
         }
-        write(fd_writ[i], string, (strlen(string)+1));
+        write(fd_writ[i], string, 1);
         printf("P %d sent to: %d\n", id,(int)i);
     }
     for (size_t i = 0; i < process_count; i++) {
-        nbytes = read(fd_read[id], readbuffer, strlen(string)+1);
-        int id_r = readbuffer[1];
+        nbytes = read(fd_read[id], readbuffer, 1);
+        int id_r = readbuffer[0];
         printf("P %d received from: %d\n", id,id_r);
     }
     while( wait(NULL) > 0 );
