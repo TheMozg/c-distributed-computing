@@ -54,7 +54,7 @@ int main (int argc, char **argv) {
             msg.s_header.s_payload_len = sizeof(local_id);
             msg.s_header.s_type = STARTED;
             memcpy(&(msg.s_payload), &id, sizeof(local_id));
-            write(this_process.fd_writ[i], &msg, sizeof(Message));
+            send(&this_process, i, &msg);
             printf("P %d sent to: %d\n", this_process.id, i);
         }
     }
@@ -62,7 +62,7 @@ int main (int argc, char **argv) {
     // Wait for messages from all other processes
     for (local_id i = 0; i < process_count - 1; i++) {
         Message msg;
-        read(this_process.fd_read[id], &msg, sizeof(Message));
+        receive_any(&this_process, &msg);
         local_id id_r;
         memcpy(&id_r, msg.s_payload, msg.s_header.s_payload_len);
         printf("P %d received from: %d\n", this_process.id, id_r);
