@@ -15,11 +15,11 @@ PACKAGE  := $(TARGET).tar.gz
 .PHONY: all
 all: $(TARDIR)/$(PACKAGE)
 
-$(BINDIR)/$(TARGET): $(SOURCES) $(HEADERS) | $(BINDIR)
+$(BINDIR)/$(TARGET): $(SOURCES) $(HEADERS) $(MAKEFILE_LIST) | $(BINDIR)
 	$(CC) $(CFLAGS) $(SOURCES) -o $@
 
 $(TARDIR)/$(PACKAGE): $(BINDIR)/$(TARGET) | $(TARDIR)
-	tar czvf $(TARDIR)/$(PACKAGE) $(SOURCES) $(HEADERS)
+	tar czf $(TARDIR)/$(PACKAGE) $(SOURCES) $(HEADERS)
 
 $(BINDIR) $(TARDIR):
 	mkdir $@
