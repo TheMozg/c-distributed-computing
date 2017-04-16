@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include "pa1.h"
 #include "ipc.h"
+#include "proc.h"
 
 static char doc[] = "ITMO Distributed Computing programming assignment #1";
 
@@ -39,51 +40,24 @@ int main (int argc, char **argv) {
     // Increment to get total number of processes
     process_count++;
 
-    // Init file descriptors
-    int fd_read[process_count];
-    int fd_writ[process_count];
-    for (local_id i = 0; i < process_count; i++) {
-        int fd[2];
-        pipe(fd);
-        fd_read[i] = fd[0];
-        fd_writ[i] = fd[1];
-    }
-
+    proc_t this_process;
+ 
     // PARENT_ID does not have to be 0
-    local_id id = PARENT_ID;
-    // Spawn child processes
-    for (local_id i = 0; i < process_count; i++) {
-        if (i != PARENT_ID && id == PARENT_ID) {
-            pid_t pid = fork();
-            if (pid == 0) {
-                id = i;
-                printf(log_started_fmt, id, getpid(), getppid());
-            }
-        }
-    }
-
-    // Close write fd of current process since it does not message itself
-    close(fd_writ[id]);
-    // Close read fd of all other processes. Read messages only for this process
-    for (local_id i = 0; i < process_count; i++) {
-        if (i != id) {
-            close(fd_read[i]);
-        }
-    }
+    local_id id = spawn_procs( &this_process, process_count );
 
     // Send messages to all other processes
     for (local_id i = 0; i < process_count; i++) {
         if (i != id) {
-            write(fd_writ[i], &id, sizeof(local_id));
-            printf("P %d sent to: %d\n", id, i);
+            write(this_process.fd_writ[i], &id, sizeof(local_id));
+            printf("P %d sent to: %d\n", this_process.id, i);
         }
     }
 
     // Wait for messages from all other processes
     for (local_id i = 0; i < process_count - 1; i++) {
         local_id id_r;
-        read(fd_read[id], &id_r, sizeof(local_id));
-        printf("P %d received from: %d\n", id, id_r);
+        read(this_process.fd_read[id], &id_r, sizeof(local_id));
+        printf("P %d received from: %d\n", this_process.id, id_r);
     }
 
     // Wait for children
