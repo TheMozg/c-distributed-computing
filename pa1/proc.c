@@ -4,7 +4,9 @@
 #include "proc.h"
 #include "ipc.h"
 #include "pa1.h" // Won't be needed after logger
+#include "logger.h"
 
+// Create pipes and child processes
 local_id spawn_procs ( proc_t* proc, int process_count ) {
         
     // Init file descriptors
@@ -26,8 +28,7 @@ local_id spawn_procs ( proc_t* proc, int process_count ) {
             pid_t pid = fork();
             if ( pid == 0 ) {
                 proc->id = i;
-                // TODO: make logger here
-                printf( log_started_fmt, proc->id, getpid(), getppid() );
+                log_started( proc->id, getpid(), getppid() );
             }
         }
     }
@@ -44,3 +45,4 @@ local_id spawn_procs ( proc_t* proc, int process_count ) {
 
     return proc->id;
 }
+

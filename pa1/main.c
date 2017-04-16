@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <unistd.h>
-#include <errno.h>
+//#include <errno.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #include "pa1.h"
 #include "ipc.h"
 #include "proc.h"
@@ -38,6 +38,7 @@ int main (int argc, char **argv) {
     // Get number of child processes
     local_id process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
+
     // Increment to get total number of processes
     process_count++;
 
