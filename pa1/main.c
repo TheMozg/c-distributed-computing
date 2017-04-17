@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <argp.h>
 #include <unistd.h>
-#include <string.h>
 #include <sys/wait.h>
 
 #include "ipc.h"
@@ -49,11 +48,12 @@ int main (int argc, char **argv) {
 
     // Send messages to all other processes
     if (this_process.id != PARENT_ID){
-        Message msg;
-        msg.s_header.s_magic = MESSAGE_MAGIC;
-        msg.s_header.s_payload_len = strlen(buf);
-        msg.s_header.s_type = STARTED;
-        memcpy(&(msg.s_payload), buf, strlen(buf));
+       // Message msg;
+       // msg.s_header.s_magic = MESSAGE_MAGIC;
+       // msg.s_header.s_payload_len = strlen(buf);
+       // msg.s_header.s_type = STARTED;
+       // memcpy(&(msg.s_payload), buf, strlen(buf));
+        Message msg = create_message ( STARTED, buf );
         send_multicast(&this_process, &msg);
     }
     
