@@ -50,13 +50,13 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
     int counter_done = 0;
     int parent_proc = 0; // We wait for one process more if PARENT
 
-    int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
+ //   int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
     if ( proc->id == PARENT_ID ) 
         parent_proc = 1;
     
     int current_counter = 0;
 
-    do {
+  //  do {
         for (local_id i = 0; i < proc->process_count + parent_proc; i++) {
             if(i != proc->id && i != PARENT_ID){
                 Message msg;
@@ -70,7 +70,7 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
         } 
 
     current_counter = ( status == STARTED ) ? counter_started : counter_done;
-    } while ( current_counter < procs_to_wait + parent_proc ); // To ensure that we got all messages
+ //   } while ( current_counter < procs_to_wait + parent_proc ); // To ensure that we got all messages
 }
 
 void wait_for_all_started ( proc_t* proc ) {
