@@ -22,8 +22,8 @@ int fd_event;
 int fd_pipes;
 
 int start_log () {
-    fd_event = open( EVENT_FILE, O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH );
-    fd_pipes = open( PIPES_FILE, O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH );
+    fd_event = open( EVENT_FILE, O_TRUNC | O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH );
+    fd_pipes = open( PIPES_FILE, O_TRUNC | O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH );
 
     if ( fd_event == -1 || fd_pipes == -1 ) {
         log_error(fd_event, LOG_START_ERROR);

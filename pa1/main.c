@@ -44,10 +44,13 @@ Message create_message ( MessageType type, char* contents ) {
 
 static struct argp argp = { options, parse_opt, 0, doc };
 
-int wait_for_all_messages ( proc_t* proc, int counter_done, MessageType status ) {
+void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 
     int counter_started = 0;
+    int counter_done = 0;
+
     int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
+
     int current_counter = 0;
 
     do {
@@ -55,25 +58,24 @@ int wait_for_all_messages ( proc_t* proc, int counter_done, MessageType status )
             if(i != proc->id && (i != PARENT_ID || proc->id == PARENT_ID)){
                 Message msg;
                 receive(proc, i, &msg);
-                if ( status == STARTED ) {
+                if ( status == STARTED ) 
                     if (msg.s_header.s_type == STARTED) counter_started++;
-                }
-                if (msg.s_header.s_type == DONE) counter_done++;
+
+                if ( status == DONE ) 
+                    if (msg.s_header.s_type == DONE) counter_done++;
             }
         } 
 
     current_counter = ( status == STARTED ) ? counter_started : counter_done;
-    } while ( current_counter < procs_to_wait ); // To ensure that we got all STARTED messages
-
-    return counter_done;
+    } while ( current_counter < procs_to_wait ); // To ensure that we got all messages
 }
 
-int wait_for_all_started ( proc_t* proc ) {
-    return wait_for_all_messages ( proc, 0, STARTED );
+void wait_for_all_started ( proc_t* proc ) {
+    wait_for_all_messages ( proc, STARTED );
 }
 
-void wait_for_all_done ( proc_t* proc, int counter_done ) {
-    wait_for_all_messages ( proc, counter_done, DONE );
+void wait_for_all_done ( proc_t* proc ) {
+    wait_for_all_messages ( proc, DONE );
 }
 
 void send_started ( proc_t* proc, char* buf ) {
@@ -90,25 +92,27 @@ void children_routine ( proc_t* proc, char* buf ) {
     
     send_started ( proc, buf );
 
-    int counter_done = wait_for_all_started ( proc );
+    wait_for_all_started ( proc );
 
     send_done ( proc, buf );
     log_received_all_started ( proc->id );
     
-    wait_for_all_done ( proc, counter_done );
-
+    wait_for_all_done ( proc );
+    
+    usleep(1); //just to align log
     log_received_all_done ( proc->id );
     log_done ( proc->id );
 }
 
 void parent_routine ( proc_t* proc, char* buf ) {
-    int counter_done = wait_for_all_started ( proc );
-    wait_for_all_done ( proc, counter_done );
+    wait_for_all_started ( proc );
+    wait_for_all_done ( proc );
     close_log();
 }
 
 int main (int argc, char **argv) {
     start_log();
+
     // Get number of child processes
     local_id process_count = 0;
     argp_parse (&argp, argc, argv, 0, 0, &process_count);
