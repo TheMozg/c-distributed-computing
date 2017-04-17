@@ -21,7 +21,9 @@ int send_multicast(void * self, const Message * msg) {
 }
 
 int receive(void * self, local_id from, Message * msg) {
-    return -1;
+    proc_t * proc = self;
+    while ( read(proc->fd_read[from], msg, sizeof(Message)) < 0);
+    return 0;
 }
 
 int receive_any(void * self, Message * msg) {
