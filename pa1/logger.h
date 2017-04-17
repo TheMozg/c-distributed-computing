@@ -24,7 +24,7 @@ void log_error ( int fd, const char *str );
 
 char* log_output ( int fd, const char *format, ... );
 
-void log_started ( local_id id, pid_t pid, pid_t parent );
+char* log_started ( local_id id, pid_t pid, pid_t parent );
 
 void log_done ( local_id id );
 

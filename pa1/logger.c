@@ -65,8 +65,8 @@ char* log_output ( int fd, const char *format, ... ) {
     return buffer;
 }
 
-void log_started ( local_id id, pid_t pid, pid_t parent ) {
-    log_output( fd_event, log_started_fmt, id, pid, parent );
+char* log_started ( local_id id, pid_t pid, pid_t parent ) {
+    return log_output( fd_event, log_started_fmt, id, pid, parent );
 }
 
 void log_done ( local_id id ) {

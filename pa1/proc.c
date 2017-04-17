@@ -72,20 +72,21 @@ void close_unused_pipes ( proc_t* proc ) {
 }
 
 // Spawn child processes. Here fork() happens.
-void spawn_procs ( proc_t* proc ) {
+char* spawn_procs ( proc_t* proc ) {
     for ( local_id i = 0; i < proc->process_count; i++ ) {
         if ( i != PARENT_ID && proc->id == PARENT_ID ) {
             pid_t pid = fork();
             if ( pid == 0 ) {
                 proc->id = i;
-                log_started( proc->id, getpid(), getppid() );
+                return log_started( proc->id, getpid(), getppid() );
             }
         }
     }
+    return NULL;
 }
 
 // Create pipes and child processes
-local_id start_procs ( proc_t* proc, int process_count ) {
+char* start_procs ( proc_t* proc, int process_count ) {
 
     // Init parent
     init_parent ( proc, process_count );
@@ -97,11 +98,11 @@ local_id start_procs ( proc_t* proc, int process_count ) {
     create_all_pipes ( proc );
 
     // Spawn child processes. Here fork() happens.
-    spawn_procs ( proc );
+    char * buf = spawn_procs ( proc );
 
     // Close unused fd
     close_unused_pipes ( proc );
 
-    return proc->id;
+    return buf;
 }
 

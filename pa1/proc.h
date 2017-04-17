@@ -23,8 +23,8 @@ void alloc_pipes ( proc_t* proc );
 
 void close_unused_pipes ( proc_t* proc );
 
-void spawn_procs ( proc_t* proc );
+char* spawn_procs ( proc_t* proc );
 
-local_id start_procs ( proc_t* proc, int process_count );
+char* start_procs ( proc_t* proc, int process_count );
 
 #endif // _PROC_H_
