@@ -6,6 +6,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include "logger.h"
 #include "pa1.h"
@@ -77,9 +78,9 @@ void log_received_all_done ( local_id id ) {
 }
 
 void log_created_pipe ( local_id id, int fd ) {
-    log_output( fd_pipes, log_created_pipe_fmt, id, fd );
+    log_output( fd_pipes, log_created_pipe_fmt, fd, id );
 }
 
 void log_closed_pipe ( local_id id, int fd ) {
-    log_output( fd_pipes, log_closed_pipe_fmt, id, fd );
+    log_output( fd_pipes, log_closed_pipe_fmt, fd, id );
 }

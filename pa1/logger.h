@@ -7,10 +7,10 @@
 #include "ipc.h"
 
 static const char * const log_created_pipe_fmt =
-    "Process %d CREATED pipe %d\n";
+    "CREATED pipe %d for process %d\n";
 
 static const char * const log_closed_pipe_fmt =
-    "Process %d CLOSED pipe %d\n";
+    "CLOSED pipe %d for process %d\n";
 
 
 extern int fd_event;
