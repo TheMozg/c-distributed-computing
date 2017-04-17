@@ -127,6 +127,6 @@ int main (int argc, char **argv) {
 
     free(buf);
     // Exit
-    log_output(fd_event, "P %d quit\n", this_process.id);
+    //log_output(fd_event, "P %d quit\n", this_process.id);
     exit (EXIT_SUCCESS);
 }
