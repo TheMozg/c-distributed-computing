@@ -46,12 +46,13 @@ void log_error ( int fd, const char *str ) {
     write( fd, str, strlen(str) );
 }
 
-void log_output ( int fd, const char *format, ... ) {
+char* log_output ( int fd, const char *format, ... ) {
     int bufsize = sysconf(_SC_PAGESIZE);
-    char buffer[bufsize];
 
     va_list args;
     va_start(args, format);
+
+    char *buffer = (char *) malloc(bufsize);
 
     vsprintf(buffer, format, args);
 
@@ -59,6 +60,8 @@ void log_output ( int fd, const char *format, ... ) {
     write( fd, buffer, strlen(buffer) );
 
     va_end(args);
+
+    return buffer;
 }
 
 void log_started ( local_id id, pid_t pid, pid_t parent ) {

@@ -22,7 +22,7 @@ void close_log ();
 
 void log_error ( int fd, const char *str );
 
-void log_output ( int fd, const char *format, ... );
+char* log_output ( int fd, const char *format, ... );
 
 void log_started ( local_id id, pid_t pid, pid_t parent );
 
