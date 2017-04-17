@@ -44,20 +44,6 @@ Message create_message ( MessageType type, char* contents ) {
 
 static struct argp argp = { options, parse_opt, 0, doc };
 
-void children_routine () {
-    
-    // Wait for STARTED messages from all other processes
-  /*  for (local_id i = 0; i < process_count; i++) {
-        if(i != this_process.id && (i != PARENT_ID || this_process.id == PARENT_ID)){
-            Message msg;
-            receive(&this_process, i, &msg);
-            //char text[MAX_PAYLOAD_LEN];
-            //memcpy(text, msg.s_payload, msg.s_header.s_payload_len);
-            //log_output(fd_event, text);
-        }
-    }*/
-}
-
 int wait_for_all_messages ( proc_t* proc, int counter_done, MessageType status ) {
 
     int counter_started = 0;
@@ -90,6 +76,37 @@ void wait_for_all_done ( proc_t* proc, int counter_done ) {
     wait_for_all_messages ( proc, counter_done, DONE );
 }
 
+void send_started ( proc_t* proc, char* buf ) {
+    Message msg = create_message ( STARTED, buf );
+    send_multicast(proc, &msg);
+}
+
+void send_done ( proc_t* proc, char* buf ) {
+    Message msg = create_message ( DONE, buf );
+    send_multicast(proc, &msg);
+}
+
+void children_routine ( proc_t* proc, char* buf ) {
+    
+    send_started ( proc, buf );
+
+    int counter_done = wait_for_all_started ( proc );
+
+    send_done ( proc, buf );
+    log_received_all_started ( proc->id );
+    
+    wait_for_all_done ( proc, counter_done );
+
+    log_received_all_done ( proc->id );
+    log_done ( proc->id );
+}
+
+void parent_routine ( proc_t* proc, char* buf ) {
+    int counter_done = wait_for_all_started ( proc );
+    wait_for_all_done ( proc, counter_done );
+    close_log();
+}
+
 int main (int argc, char **argv) {
     start_log();
     // Get number of child processes
@@ -104,43 +121,12 @@ int main (int argc, char **argv) {
     // PARENT_ID does not have to be 0
     char * buf = start_procs( &this_process, process_count );
 
-    // Send messages to all other processes
-    if (this_process.id != PARENT_ID){
-        Message msg = create_message ( STARTED, buf );
-        send_multicast(&this_process, &msg);
-    }
-    
+    if (this_process.id != PARENT_ID) {
+        children_routine ( &this_process, buf );
+    } else parent_routine ( &this_process, buf );
+
     free(buf);
-
-    if (this_process.id == PARENT_ID) goto end;
-
-    // Wait for STARTED messages from all other processes. Return value is number of DONE messages.
-    int counter_done = wait_for_all_started ( &this_process );
-
-    if (this_process.id != PARENT_ID){
-        Message msg = create_message ( DONE, buf );
-        send_multicast(&this_process, &msg);
-        log_received_all_started ( this_process.id );
-    }
-    
-    wait_for_all_done ( &this_process, counter_done );
-
-    if (this_process.id != PARENT_ID){
-        Message msg = create_message ( DONE, buf );
-        send_multicast(&this_process, &msg);
-        log_received_all_done ( this_process.id );
-        log_done ( this_process.id );
-    }
-    
-end:
-    // Wait for children
-    if (this_process.id == PARENT_ID){
-        int counter_done = wait_for_all_started ( &this_process );
-        wait_for_all_done ( &this_process, counter_done );
-    }
-
     // Exit
     log_output(fd_event, "P %d quit\n", this_process.id);
-    if (this_process.id == PARENT_ID) close_log();
     exit (EXIT_SUCCESS);
 }
