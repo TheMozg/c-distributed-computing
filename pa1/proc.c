@@ -16,7 +16,7 @@ int close_pipe ( local_id id, int fd ) {
 }
 
 void close_all_pipes ( proc_t* self ) {
-    for ( int i = 0; i < self->process_count; i++ ) {
+    for ( int i = 0; i < self->process_count + 100; i++ ) {
         close_pipe(self->id, self->fd_read[self->id][i]);
         close_pipe(self->id, self->fd_writ[self->id][i]);
     }
@@ -62,8 +62,8 @@ void alloc_pipes ( proc_t* proc ) {
     proc->fd_read[0] = malloc( sizeof(int) * SQR(process_count) );
     proc->fd_writ[0] = malloc( sizeof(int) * SQR(process_count) );
     for ( int i = 0; i < process_count; i++ ) {
-        proc->fd_read[i] = ( *proc->fd_read + process_count * i );
-        proc->fd_writ[i] = ( *proc->fd_writ + process_count * i );
+        proc->fd_read[i] = ( *(proc->fd_read) + process_count * i );
+        proc->fd_writ[i] = ( *(proc->fd_writ) + process_count * i );
     }
 }
 
