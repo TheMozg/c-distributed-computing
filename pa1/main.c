@@ -48,14 +48,17 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 
     int counter_started = 0;
     int counter_done = 0;
+    int parent_proc = 0; // We wait for one process more if PARENT
 
     int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
-
+    if ( proc->id == PARENT_ID ) 
+        parent_proc = 1;
+    
     int current_counter = 0;
 
     do {
-        for (local_id i = 0; i < proc->process_count; i++) {
-            if(i != proc->id && (i != PARENT_ID || proc->id == PARENT_ID)){
+        for (local_id i = 0; i < proc->process_count + parent_proc; i++) {
+            if(i != proc->id && i != PARENT_ID){
                 Message msg;
                 receive(proc, i, &msg);
                 if ( status == STARTED ) 
@@ -67,7 +70,7 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
         } 
 
     current_counter = ( status == STARTED ) ? counter_started : counter_done;
-    } while ( current_counter < procs_to_wait ); // To ensure that we got all messages
+    } while ( current_counter < procs_to_wait + parent_proc ); // To ensure that we got all messages
 }
 
 void wait_for_all_started ( proc_t* proc ) {
@@ -94,19 +97,22 @@ void children_routine ( proc_t* proc, char* buf ) {
 
     wait_for_all_started ( proc );
 
-    send_done ( proc, buf );
+    char* buf2 = log_done ( proc->id );
+    send_done ( proc, buf2 );
+    free (buf2);
+
     log_received_all_started ( proc->id );
     
     wait_for_all_done ( proc );
     
-    usleep(1); //just to align log
+    //usleep(1); //just to align log
     log_received_all_done ( proc->id );
-    log_done ( proc->id );
 }
 
-void parent_routine ( proc_t* proc, char* buf ) {
+void parent_routine ( proc_t* proc ) {
     wait_for_all_started ( proc );
     wait_for_all_done ( proc );
+    while( wait(NULL) > 0);
     close_log();
 }
 
@@ -127,7 +133,7 @@ int main (int argc, char **argv) {
 
     if (this_process.id != PARENT_ID) {
         children_routine ( &this_process, buf );
-    } else parent_routine ( &this_process, buf );
+    } else parent_routine ( &this_process );
 
     free(buf);
     // Exit

@@ -69,8 +69,8 @@ char* log_started ( local_id id, pid_t pid, pid_t parent ) {
     return log_output( fd_event, log_started_fmt, id, pid, parent );
 }
 
-void log_done ( local_id id ) {
-    log_output( fd_event, log_done_fmt, id );
+char* log_done ( local_id id ) {
+    return log_output( fd_event, log_done_fmt, id );
 }
 
 void log_received_all_started ( local_id id ) {
