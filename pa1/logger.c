@@ -56,7 +56,8 @@ char* log_output ( int fd, const char *format, ... ) {
 
     vsprintf(buffer, format, args);
 
-    write( STDOUT_FILENO, buffer, strlen(buffer) );
+    if ( fd == fd_event )
+      write( STDOUT_FILENO, buffer, strlen(buffer) );
     write( fd, buffer, strlen(buffer) );
 
     va_end(args);
