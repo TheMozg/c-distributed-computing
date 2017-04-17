@@ -45,25 +45,27 @@ int main (int argc, char **argv) {
     proc_t this_process;
  
     // PARENT_ID does not have to be 0
-    local_id id = spawn_procs( &this_process, process_count );
+    local_id id = start_procs( &this_process, process_count );
 
     // Send messages to all other processes
-    Message msg;
-    msg.s_header.s_magic = MESSAGE_MAGIC;
-    msg.s_header.s_payload_len = sizeof(local_id);
-    msg.s_header.s_type = STARTED;
-    memcpy(&(msg.s_payload), &id, sizeof(local_id));
-    send_multicast(&this_process, &msg);
+    if (id == PARENT_ID){
+        Message msg;
+        msg.s_header.s_magic = MESSAGE_MAGIC;
+        msg.s_header.s_payload_len = sizeof(local_id);
+        msg.s_header.s_type = STARTED;
+        memcpy(&(msg.s_payload), &id, sizeof(local_id));
+        send_multicast(&this_process, &msg);
+    }
 
     // Wait for messages from all other processes
-    for (local_id i = 0; i < process_count - 1; i++) {
+  /*`  for (local_id i = 1; i < process_count; i++) {
         Message msg;
-        receive_any(&this_process, &msg);
+        receive(&this_process, i, &msg);
         local_id id_r;
         memcpy(&id_r, msg.s_payload, msg.s_header.s_payload_len);
         log_output(fd_event, "P %d received from: %d\n", this_process.id, id_r);
     }
-
+*/
     // Wait for children
     if (id == PARENT_ID){
         while( wait(NULL) > 0 );
