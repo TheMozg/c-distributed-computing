@@ -25,8 +25,6 @@ void close_unused_pipes ( proc_t* proc );
 
 char* spawn_procs ( proc_t* proc );
 
-Message create_message ( MessageType type, char* contents );
-
 char* start_procs ( proc_t* proc, int process_count );
 
 #endif // _PROC_H_

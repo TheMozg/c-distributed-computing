@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 
 #include "proc.h"
 #include "logger.h"
@@ -84,17 +83,6 @@ char* spawn_procs ( proc_t* proc ) {
         }
     }
     return NULL;
-}
-
-Message create_message ( MessageType type, char* contents ) {
-    Message msg;
-
-    msg.s_header.s_magic = MESSAGE_MAGIC;
-    msg.s_header.s_payload_len = strlen(contents);
-    msg.s_header.s_type = type;
-    memcpy(&(msg.s_payload), contents, strlen(contents));
-
-    return msg;
 }
 
 // Create pipes and child processes

@@ -2,6 +2,7 @@
 #include <argp.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #include "ipc.h"
 #include "proc.h"
@@ -28,6 +29,17 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
         return ARGP_ERR_UNKNOWN;
     }
     return 0;
+}
+
+Message create_message ( MessageType type, char* contents ) {
+    Message msg;
+
+    msg.s_header.s_magic = MESSAGE_MAGIC;
+    msg.s_header.s_payload_len = strlen(contents);
+    msg.s_header.s_type = type;
+    memcpy(&(msg.s_payload), contents, strlen(contents));
+
+    return msg;
 }
 
 static struct argp argp = { options, parse_opt, 0, doc };
