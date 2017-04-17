@@ -6,26 +6,18 @@
 
 #define SQR(x) x*x
 
-int close_pipe ( local_id id, int fd ) {
+int close_fd ( local_id id, int fd ) {
     if ( close(fd) == 0 ) {
-        log_closed_pipe(id, fd);
+        log_closed_fd(id, fd);
         return 0;
     }
 
     return -1;
 }
 
-void close_all_pipes ( proc_t* self ) {
-    for ( int i = 0; i < self->process_count + 100; i++ ) {
-        close_pipe(self->id, self->fd_read[self->id][i]);
-        close_pipe(self->id, self->fd_writ[self->id][i]);
-    }
-}
-
 int create_pipe ( local_id id, int* fd ) {
     if ( pipe(fd) == 0 ) {
-        log_created_pipe(id, fd[0]);
-        log_created_pipe(id, fd[1]);
+        log_created_pipe(id, fd);
         return 0;
     }
 
@@ -38,8 +30,8 @@ void create_all_pipes ( proc_t* proc ) {
         for ( local_id j = 0; j < proc->process_count; j++ ) {
             if ( j!=i ) {
                 int fd[2];
-                create_pipe(i, fd);
-                proc->fd_read[i][j] = fd[0];
+                create_pipe(proc->id, fd);
+                proc->fd_read[j][i] = fd[0];
                 proc->fd_writ[i][j] = fd[1];
             }
         }
@@ -67,11 +59,14 @@ void alloc_pipes ( proc_t* proc ) {
     }
 }
 
-// Close read fd of all other processes. Read messages only for this process
+// Close unused fd of the process
 void close_unused_pipes ( proc_t* proc ) {
     for ( local_id i = 0; i < proc->process_count; i++ ) {
-        if ( i != proc->id ) {
-            close_pipe( proc->id, proc->fd_read[proc->id][i] );
+        for ( local_id j = 0; j < proc->process_count; j++ ) {
+            if ( i != proc->id && i != j ) {
+                close_fd( proc->id, proc->fd_read[i][j] );
+                close_fd( proc->id, proc->fd_writ[i][j] );
+            }
         }
     }
 }
@@ -104,7 +99,7 @@ local_id start_procs ( proc_t* proc, int process_count ) {
     // Spawn child processes. Here fork() happens.
     spawn_procs ( proc );
 
-    // Close read fd of all other processes. Read messages only for this process
+    // Close unused fd
     close_unused_pipes ( proc );
 
     return proc->id;

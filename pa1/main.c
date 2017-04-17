@@ -48,14 +48,14 @@ int main (int argc, char **argv) {
     local_id id = start_procs( &this_process, process_count );
 
     // Send messages to all other processes
-    if (id == PARENT_ID){
-        Message msg;
-        msg.s_header.s_magic = MESSAGE_MAGIC;
-        msg.s_header.s_payload_len = sizeof(local_id);
-        msg.s_header.s_type = STARTED;
-        memcpy(&(msg.s_payload), &id, sizeof(local_id));
-        send_multicast(&this_process, &msg);
-    }
+    // if (id == PARENT_ID){
+    //     Message msg;
+    //     msg.s_header.s_magic = MESSAGE_MAGIC;
+    //     msg.s_header.s_payload_len = sizeof(local_id);
+    //     msg.s_header.s_type = STARTED;
+    //     memcpy(&(msg.s_payload), &id, sizeof(local_id));
+    //     send_multicast(&this_process, &msg);
+    // }
 
     // Wait for messages from all other processes
   /*`  for (local_id i = 1; i < process_count; i++) {
@@ -69,7 +69,6 @@ int main (int argc, char **argv) {
     // Wait for children
     if (id == PARENT_ID){
         while( wait(NULL) > 0 );
-        close_all_pipes(&this_process);
     }
 
     // Exit

@@ -11,9 +11,7 @@ typedef struct {
     int       **fd_writ;
 } proc_t;
 
-int close_pipe ( local_id id, int fd );
-
-void close_all_pipes ( proc_t* self );
+int close_fd ( local_id id, int fd );
 
 int create_pipe ( local_id id, int* fd );
 

@@ -7,10 +7,10 @@
 #include "ipc.h"
 
 static const char * const log_created_pipe_fmt =
-    "CREATED pipe %d for process %d\n";
+    "Process %d CREATED pipe (read fd %d, write fd %d)\n";
 
-static const char * const log_closed_pipe_fmt =
-    "CLOSED pipe %d for process %d\n";
+static const char * const log_closed_fd_fmt =
+    "Process %d CLOSED fd %d\n";
 
 
 extern int fd_event;
@@ -32,7 +32,7 @@ void log_received_all_started ( local_id id );
 
 void log_received_all_done ( local_id id );
 
-void log_created_pipe ( local_id id, int fd );
+void log_created_pipe ( local_id id, int* fd );
 
-void log_closed_pipe ( local_id id, int fd );
+void log_closed_fd ( local_id id, int fd );
 #endif //_LOGER_H_

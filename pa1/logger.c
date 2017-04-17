@@ -77,10 +77,10 @@ void log_received_all_done ( local_id id ) {
     log_output( fd_event, log_received_all_done_fmt, id );
 }
 
-void log_created_pipe ( local_id id, int fd ) {
-    log_output( fd_pipes, log_created_pipe_fmt, fd, id );
+void log_created_pipe ( local_id id, int* fd ) {
+    log_output( fd_pipes, log_created_pipe_fmt, id, fd[0], fd[1] );
 }
 
-void log_closed_pipe ( local_id id, int fd ) {
-    log_output( fd_pipes, log_closed_pipe_fmt, fd, id );
+void log_closed_fd ( local_id id, int fd ) {
+    log_output( fd_pipes, log_closed_fd_fmt, id, fd );
 }
