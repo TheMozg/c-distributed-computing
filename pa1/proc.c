@@ -25,8 +25,8 @@ int create_pipe ( local_id id, int* fd ) {
 
 void close_all_pipes ( proc_t* self ) {
     for ( int i = 0; i < self->process_count; i++ ) {
-        close(self->fd_read[i]);
-        close(self->fd_writ[i]);
+        close_pipe(self->id, self->fd_read[i]);
+        close_pipe(self->id, self->fd_writ[i]);
     }
 }
 // Create pipes and child processes
