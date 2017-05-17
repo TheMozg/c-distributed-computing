@@ -1,28 +1,37 @@
-TARGET   = pa1
-
 CC       = clang
 CFLAGS   = -std=c99 -Wall -pedantic
 
-SRCDIR   = pa1
 BINDIR   = bin
 TARDIR   = tar
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-HEADERS  := $(wildcard $(SRCDIR)/*.h)
-
-PACKAGE  := $(TARGET).tar.gz
-
 .PHONY: all
-all: $(TARDIR)/$(PACKAGE)
-
-$(BINDIR)/$(TARGET): $(SOURCES) $(HEADERS) $(MAKEFILE_LIST) | $(BINDIR)
-	$(CC) $(CFLAGS) $(SOURCES) -o $@
-
-$(TARDIR)/$(PACKAGE): $(BINDIR)/$(TARGET) | $(TARDIR)
-	tar czf $(TARDIR)/$(PACKAGE) $(SOURCES) $(HEADERS)
+all:
 
 $(BINDIR) $(TARDIR):
 	mkdir $@
+
+define INIT_PROJECT_RULES
+SOURCES_$(1)  := $$(wildcard $(1)/*.c)
+HEADERS_$(1)  := $$(wildcard $(1)/*.h)
+PACKAGE_$(1)  := $(TARDIR)/$(1).tar.gz
+TARGET_$(1)   := $(BINDIR)/$(1)
+CFLAGS_$(1)   := $(2)
+
+all: $(1)
+
+.PHONY: $(1)
+$(1): $$(PACKAGE_$(1))
+
+$$(PACKAGE_$(1)): $$(TARGET_$(1)) | $(TARDIR)
+	tar czf $$(PACKAGE_$(1)) $$(SOURCES_$(1)) $$(HEADERS_$(1))
+
+$$(TARGET_$(1)): $$(SOURCES_$(1)) $$(HEADERS_$(1)) $(MAKEFILE_LIST) | $(BINDIR)
+	$(CC) $(CFLAGS) $$(CFLAGS_$(1)) $$(SOURCES_$(1)) -o $$@
+
+endef
+
+$(eval $(call INIT_PROJECT_RULES,pa1))
+$(eval $(call INIT_PROJECT_RULES,pa2,-L./pa2 -lruntime))
 
 .PHONY: clean
 clean:
