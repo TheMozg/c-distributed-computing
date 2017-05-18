@@ -39,3 +39,4 @@ $(eval $(call INIT_PROJECT_RULES,pa2,-L./pa2 -lruntime))
 clean:
 	rm -rf $(BINDIR)
 	rm -rf $(TARDIR)
+	rm *.log
