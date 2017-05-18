@@ -4,6 +4,8 @@ CFLAGS   = -std=c99 -Wall -pedantic
 BINDIR   = bin
 TARDIR   = tar
 
+CWD		 = $(shell pwd)
+
 .PHONY: all
 all:
 

@@ -2,6 +2,8 @@
 #define _PROC_H_
 
 #include "ipc.h"
+#include "banking.h"
+
 #include <sys/types.h>
 
 typedef struct {
@@ -9,6 +11,8 @@ typedef struct {
     local_id  process_count;
     int       **fd_read;
     int       **fd_writ;
+    BalanceState    balance_state;
+    BalanceHistory  balance_history;
 } proc_t;
 
 int close_fd ( local_id id, int fd );
@@ -23,8 +27,8 @@ void alloc_pipes ( proc_t* proc );
 
 void close_unused_pipes ( proc_t* proc );
 
-char* spawn_procs ( proc_t* proc );
+char* spawn_procs ( proc_t* proc, balance_t* balance );
 
-char* start_procs ( proc_t* proc, int process_count );
+char* start_procs ( proc_t* proc, int process_count, balance_t* balance );
 
 #endif // _PROC_H_

@@ -27,7 +27,15 @@ int receive(void * self, local_id from, Message * msg) {
     return 0;
 }
 
+// TODO: Validate
 int receive_any(void * self, Message * msg) {
-    // Not implemented yet
-    return -1;
+    proc_t * proc = self;
+    while(1) {
+       for ( local_id from = 0; from < proc->process_count; from++ ) {
+            int res = read(proc->fd_read[proc->id][from], msg, sizeof(Message));
+            if ( res == 0 ) return 0;
+            if ( from == proc->process_count - 1) from = 0;
+       } 
+    }
+    return 0;
 }

@@ -21,6 +21,7 @@ Message create_message ( MessageType type, char* contents ) {
     msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_payload_len = strlen(contents);
     msg.s_header.s_type = type;
+    msg.s_header.s_local_time = get_physical_time();
     memcpy(&(msg.s_payload), contents, strlen(contents));
 
     return msg;
@@ -53,6 +54,8 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 
         current_counter = ( status == STARTED ) ? counter_started : counter_done;
     } while ( current_counter < procs_to_wait + parent_proc ); // To ensure that we got all messages
+
+    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data); // Do robbery after all STARTED messages received
 }
 
 void wait_for_all_started ( proc_t* proc ) {
@@ -77,13 +80,14 @@ void children_routine ( proc_t* proc, char* buf ) {
     
     send_started ( proc, buf );
 
-    wait_for_all_started ( proc );
+    wait_for_all_started ( proc ); // Perhaps not needed?
 
-    char* buf2 = log_done ( proc->id );
+    char* buf2 = log_done ( proc );
+    proc->balance_state.s_time = get_physical_time();
     send_done ( proc, buf2 );
     free (buf2);
 
-    log_received_all_started ( proc->id );
+    log_received_all_started ( proc );
     
     wait_for_all_done ( proc );
     
@@ -164,7 +168,7 @@ int main(int argc, char * argv[])
     proc_t this_process;
  
     // PARENT_ID does not have to be 0
-    char * buf = start_procs( &this_process, process_count );
+    char * buf = start_procs( &this_process, process_count, balance );
 
     if (this_process.id != PARENT_ID) {
         children_routine ( &this_process, buf );

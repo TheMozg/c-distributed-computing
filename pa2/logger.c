@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 
 #include "logger.h"
-#include "pa1.h"
+#include "pa2345.h"
 #include "common.h"
 
 #define LOG_START_ERROR "Cannot start log"
@@ -65,16 +65,16 @@ char* log_output ( int fd, const char *format, ... ) {
     return buffer;
 }
 
-char* log_started ( local_id id, pid_t pid, pid_t parent ) {
-    return log_output( fd_event, log_started_fmt, id, pid, parent );
+char* log_started ( proc_t* proc, pid_t pid, pid_t parent ) {
+    return log_output( fd_event, log_started_fmt, proc->balance_state.s_time, proc->id, pid, parent, proc->balance_state.s_balance );
 }
 
-char* log_done ( local_id id ) {
-    return log_output( fd_event, log_done_fmt, id );
+char* log_done ( proc_t* proc ) {
+    return log_output( fd_event, log_done_fmt, proc->balance_state.s_time, proc->id, proc->balance_state.s_balance );
 }
 
-void log_received_all_started ( local_id id ) {
-    log_output( fd_event, log_received_all_started_fmt, id );
+void log_received_all_started ( proc_t* proc ) {
+    log_output( fd_event, log_received_all_started_fmt, proc->balance_state, proc->id );
 }
 
 void log_received_all_done ( local_id id ) {
