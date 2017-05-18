@@ -29,33 +29,22 @@ Message create_message ( MessageType type, char* contents ) {
 
 void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 
-    int counter_started = 0;
-    int counter_done = 0;
-    int parent_proc = 0; // We wait for one process more if PARENT
+    int counter = 0;
 
     int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
-    if ( proc->id == PARENT_ID ) 
-        parent_proc = 1;
+    if (proc->id == PARENT_ID) procs_to_wait++;
     
-    int current_counter = 0;
-
     do {
-        for (local_id i = 0; i < proc->process_count + parent_proc; i++) {
+        for (local_id i = 0; i < proc->process_count; i++) {
             if(i != proc->id && i != PARENT_ID){
                 Message msg;
                 receive(proc, i, &msg);
-                if ( status == STARTED ) 
-                    if (msg.s_header.s_type == STARTED) counter_started++;
-
-                if ( status == DONE ) 
-                    if (msg.s_header.s_type == DONE) counter_done++;
+                if (msg.s_header.s_type == status) counter++;
             }
         } 
+    } while ( counter < procs_to_wait ); // To ensure that we got all messages
 
-        current_counter = ( status == STARTED ) ? counter_started : counter_done;
-    } while ( current_counter < procs_to_wait + parent_proc ); // To ensure that we got all messages
-
-    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data); // Do robbery after all STARTED messages received
+//    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data); // Do robbery after all STARTED messages received
 }
 
 void wait_for_all_started ( proc_t* proc ) {
@@ -92,7 +81,7 @@ void children_routine ( proc_t* proc, char* buf ) {
     wait_for_all_done ( proc );
     
     //usleep(1); //just to align log
-    log_received_all_done ( proc->id );
+    log_received_all_done ( proc );
 }
 
 void parent_routine ( proc_t* proc ) {
@@ -157,7 +146,7 @@ int main(int argc, char * argv[])
     balance_t balance[process_count];
     for (local_id i = 0; i < args.process_count; i++){
         balance[i] = args.balance[i];
-        printf (i == 0 ? "%d" : ", %d", balance[i]);
+   //     printf (i == 0 ? "%d" : ", %d", balance[i]);
     }
 
     start_log();

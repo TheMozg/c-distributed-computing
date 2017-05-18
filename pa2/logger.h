@@ -31,7 +31,7 @@ char* log_done ( proc_t* proc );
 
 void log_received_all_started ( proc_t* proc );
 
-void log_received_all_done ( local_id id );
+void log_received_all_done ( proc_t* proc );
 
 void log_created_pipe ( local_id id, int* fd );
 

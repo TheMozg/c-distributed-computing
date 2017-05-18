@@ -74,11 +74,11 @@ char* log_done ( proc_t* proc ) {
 }
 
 void log_received_all_started ( proc_t* proc ) {
-    log_output( fd_event, log_received_all_started_fmt, proc->balance_state, proc->id );
+    log_output( fd_event, log_received_all_started_fmt, proc->balance_state.s_time, proc->id );
 }
 
-void log_received_all_done ( local_id id ) {
-    log_output( fd_event, log_received_all_done_fmt, id );
+void log_received_all_done ( proc_t* proc ) {
+    log_output( fd_event, log_received_all_done_fmt, proc->balance_state.s_time, proc->id );
 }
 
 void log_created_pipe ( local_id id, int* fd ) {
