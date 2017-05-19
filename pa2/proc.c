@@ -1,4 +1,7 @@
+#define _GNU_SOURCE
+
 #include <stdlib.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "proc.h"
@@ -16,7 +19,7 @@ int close_fd ( local_id id, int fd ) {
 }
 
 int create_pipe ( local_id id, int* fd ) {
-    if ( pipe(fd) == 0 ) {
+    if ( pipe2(fd, O_NONBLOCK) == 0 ) {
         log_created_pipe(id, fd);
         return 0;
     }

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <argp.h>
 #include <unistd.h>
@@ -10,8 +11,7 @@
 #include "logger.h"
 
 void transfer(void * parent_data, local_id src, local_id dst,
-              balance_t amount)
-{
+              balance_t amount) {
     // student, please implement me
 }
 
@@ -35,16 +35,16 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
     if (proc->id == PARENT_ID) procs_to_wait++;
     
     do {
-        for (local_id i = 0; i < proc->process_count; i++) {
-            if(i != proc->id && i != PARENT_ID){
+    //printf("SO AM I STILL WAITIN %d\n", proc->id);
+        for ( local_id i = 0; i < proc->process_count; i++ ) {
+            if ( i != proc->id && i != PARENT_ID ) {
                 Message msg;
-                receive(proc, i, &msg);
-                if (msg.s_header.s_type == status) counter++;
+                receive( proc, i, &msg );
+                //printf("Received from \n" );
+                if ( msg.s_header.s_type == status ) counter++;
             }
         } 
     } while ( counter < procs_to_wait ); // To ensure that we got all messages
-
-//    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data); // Do robbery after all STARTED messages received
 }
 
 void wait_for_all_started ( proc_t* proc ) {
@@ -71,21 +71,24 @@ void children_routine ( proc_t* proc, char* buf ) {
 
     wait_for_all_started ( proc ); // Perhaps not needed?
 
-    char* buf2 = log_done ( proc );
-    proc->balance_state.s_time = get_physical_time();
-    send_done ( proc, buf2 );
-    free (buf2);
-
     log_received_all_started ( proc );
+
+    char* buf2 = log_done ( proc );
+
+    send_done ( proc, buf2 );
+
+    free (buf2);
     
     wait_for_all_done ( proc );
     
-    //usleep(1); //just to align log
     log_received_all_done ( proc );
 }
 
 void parent_routine ( proc_t* proc ) {
     wait_for_all_started ( proc );
+    
+    // Do robbery after all STARTED messages received
+//    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data);
     wait_for_all_done ( proc );
     while( wait(NULL) > 0);
     close_log();
