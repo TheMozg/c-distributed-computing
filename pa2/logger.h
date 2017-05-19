@@ -36,4 +36,8 @@ void log_received_all_done ( proc_t* proc );
 void log_created_pipe ( local_id id, int* fd );
 
 void log_closed_fd ( local_id id, int fd );
+
+void log_transfer_out ( TransferOrder* trans );
+
+void log_transfer_in ( TransferOrder* trans );
 #endif //_LOGER_H_

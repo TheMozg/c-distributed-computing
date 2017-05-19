@@ -1,2 +1,2 @@
 #!/bin/bash --
-watch -n 0.1 "pgrep -a pa1"
+watch -n 0.1 "pgrep -a pa2"

@@ -1,14 +1,16 @@
 CC       = clang
-CFLAGS   = -std=c99 -Wall -pedantic
+CFLAGS   = -std=gnu99 -Wall -pedantic
 
-ifeq ($(DEBUG),y)
-   CFLAGS += -D_DEBUG_
+ifeq ($(DEBUG_IPC),y)
+   CFLAGS += -D_DEBUG_IPC_
+endif
+
+ifeq ($(DEBUG_PA),y)
+   CFLAGS += -D_DEBUG_PA_
 endif
 
 BINDIR   = bin
 TARDIR   = tar
-
-CWD		 = $(shell pwd)
 
 .PHONY: all
 all:
