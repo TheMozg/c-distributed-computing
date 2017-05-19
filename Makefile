@@ -1,6 +1,10 @@
 CC       = clang
 CFLAGS   = -std=c99 -Wall -pedantic
 
+ifeq ($(DEBUG),y)
+   CFLAGS += -D_DEBUG_
+endif
+
 BINDIR   = bin
 TARDIR   = tar
 
@@ -18,6 +22,7 @@ HEADERS_$(1)  := $$(wildcard $(1)/*.h)
 PACKAGE_$(1)  := $(TARDIR)/$(1).tar.gz
 TARGET_$(1)   := $(BINDIR)/$(1)
 CFLAGS_$(1)   := $(2)
+
 
 all: $(1)
 

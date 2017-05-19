@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <argp.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -35,16 +36,10 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
     if (proc->id == PARENT_ID) procs_to_wait++;
     
     do {
-    //printf("SO AM I STILL WAITIN %d\n", proc->id);
-        for ( local_id i = 0; i < proc->process_count; i++ ) {
-            if ( i != proc->id && i != PARENT_ID ) {
-                Message msg;
-                receive( proc, i, &msg );
-                //printf("Received from \n" );
-                if ( msg.s_header.s_type == status ) counter++;
-            }
-        } 
-    } while ( counter < procs_to_wait ); // To ensure that we got all messages
+        Message msg;
+        receive_any( proc, &msg );
+        if ( msg.s_header.s_type == status ) counter++;
+    } while ( counter < procs_to_wait );
 }
 
 void wait_for_all_started ( proc_t* proc ) {
@@ -90,7 +85,7 @@ void parent_routine ( proc_t* proc ) {
     // Do robbery after all STARTED messages received
 //    if ( status == STARTED && proc->id == PARENT_ID ) ; //bank_robbery(parent_data);
     wait_for_all_done ( proc );
-    while( wait(NULL) > 0);
+    while( wait(NULL) > 0); // Wait for all children to stop
     close_log();
 }
 

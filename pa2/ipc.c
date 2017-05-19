@@ -1,5 +1,7 @@
-#include <stdio.h>
-#include <string.h>
+#ifdef _DEBUG_
+    #include <stdio.h>
+    #include <string.h>
+#endif
 
 #include <unistd.h>
 #include <errno.h>
@@ -20,10 +22,12 @@ int send(void * self, local_id dst, const Message * msg) {
     proc_t * proc = self;
     int status = write(proc->fd_writ[proc->id][dst], msg, sizeof(MessageHeader) + msg->s_header.s_payload_len);
     
-    /*if (status == -1) {
-        printf("dead %s\n", strerror(errno));
+    #ifdef _DEBUG_
+    if (status == -1) {
+        printf("Failed to write, id %d: %s\n", proc->id, strerror(errno));
         return -1;
-    }*/
+    }
+    #endif
 
     return (status != -1) ? 0 : -1;
 }
@@ -33,7 +37,8 @@ int send_multicast(void * self, const Message * msg) {
 
     for ( local_id i = 0; i < proc->process_count; i++ ) {
         if ( i != proc->id )
-            send( proc, i, msg );
+            if ( send( proc, i, msg ) == -1 )
+                return -1;
     }
 
     return 0;
@@ -42,31 +47,34 @@ int send_multicast(void * self, const Message * msg) {
 int receive(void * self, local_id from, Message * msg) {
     proc_t * proc = self;
 
-    while( read(proc->fd_read[proc->id][from], NULL, 0) == -1 ); // Checking for errors
+    // Checks for errors from read. Mostly to avoid EBADF.
+    while( read(proc->fd_read[proc->id][from], NULL, 0) == -1 ); 
 
     int status = read(proc->fd_read[proc->id][from], msg, sizeof(Message));
 
-    /*if (status == -1) {
-        printf("deadread %s\n", strerror(errno));
+    #ifdef _DEBUG_
+    if (status == -1) {
+        printf("Failed to read, id %d: %s\n", proc->id, strerror(errno));
         return -1;
-    }*/
+    }
+    #endif
 
     return (status != -1) ? 0 : -1;
 }
 
-// TODO: Test
 /*
- * Doing receive cycling through ids until something is read
+ * Doing receive cycling through ids until something is read.
+ * Do not receive messages from process itself.
  */
 int receive_any(void * self, Message * msg) {
     proc_t * proc = self;
-    while(1) {
-       for ( local_id from = 0; from < proc->process_count; from++ ) {
-            while( read(proc->fd_read[proc->id][from], NULL, 0) == -1 ); // Checking for errors
-            int res = read(proc->fd_read[proc->id][from], msg, sizeof(Message));
-            if ( res != -1 ) return 0;
-            if ( from == proc->process_count - 1 ) from = 0;
-       } 
-    }
+    for ( local_id from = 0; from < proc->process_count; from++ ) {
+        if ( from != proc->id ) {
+            int status = receive( self, from, msg );
+            if ( status != -1 ) return 0;
+        }
+        if ( from == proc->process_count - 1 ) from = 0;
+    } 
+
     return 0;
 }
