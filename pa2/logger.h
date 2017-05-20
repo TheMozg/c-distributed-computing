@@ -1,9 +1,6 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
-#define OUTPUR  STDOUT_FILENO
-#define ERROR   STDERR_FILENO
-
 #include "ipc.h"
 #include "proc.h"
 
@@ -12,7 +9,6 @@ static const char * const log_created_pipe_fmt =
 
 static const char * const log_closed_fd_fmt =
     "Process %d CLOSED fd %d\n";
-
 
 extern int fd_event;
 extern int fd_pipes;
