@@ -50,9 +50,9 @@ void transfer(void * parent_data, local_id src, local_id dst,
 
     Message msg_rcv;
 
-    while( msg_rcv.s_header.s_type != ACK ) { // Waiting for ACK from dst
+    do { // Waiting for ACK from dst
         receive( parent_data, dst, &msg_rcv );
-    }
+    } while( msg_rcv.s_header.s_type != ACK );
 
     DEBUG(printf("\tTRANSACTION DONE src %d dst %d\n", src, dst));
 }
