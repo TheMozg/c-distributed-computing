@@ -24,10 +24,13 @@ Message create_message ( MessageType type, void* contents ) {
     Message msg;
 
     msg.s_header.s_magic = MESSAGE_MAGIC;
-    msg.s_header.s_payload_len = strlen(contents);
+    msg.s_header.s_payload_len = 0;
     msg.s_header.s_type = type;
     msg.s_header.s_local_time = get_physical_time();
-    if( contents != NULL ) memcpy(&(msg.s_payload), contents, strlen(contents));
+    if( contents != NULL ) {
+        msg.s_header.s_payload_len = strlen(contents);
+        memcpy(&(msg.s_payload), contents, strlen(contents));
+    }
 
     return msg;
 }
@@ -59,11 +62,15 @@ void transfer(void * parent_data, local_id src, local_id dst,
 
 void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 
-    int counter = 0;
+    local_id counter = 0;
 
-    int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
-    if (proc->id == PARENT_ID) procs_to_wait++;
-    
+    // Don't wait PARENT process and itself
+    local_id procs_to_wait;
+    if (proc->id == PARENT_ID)
+        procs_to_wait = proc->process_count - 1;
+    else
+        procs_to_wait = proc->process_count - 2;
+
     while ( counter < procs_to_wait ) {
         Message msg;
         receive_any( proc, &msg );
@@ -72,14 +79,12 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 }
 
 void send_status_to_all ( proc_t* proc, MessageType status ) {
-    char* buf = "";
-    Message msg = create_message ( status, buf );
+    Message msg = create_message ( status, NULL );
     send_multicast( proc, &msg );
 }
 
 void send_status ( proc_t* proc, local_id dst, MessageType status ) {
-    char* buf = "";
-    Message msg = create_message ( status, buf );
+    Message msg = create_message ( status, NULL );
     send( proc, dst, &msg );
 }
 
