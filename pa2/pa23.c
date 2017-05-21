@@ -61,11 +61,11 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
     int procs_to_wait = proc->process_count - 2; // Don't wait PARENT process and itself
     if (proc->id == PARENT_ID) procs_to_wait++;
     
-    do {
+    while ( counter < procs_to_wait ) {
         Message msg;
         receive_any( proc, &msg );
         if ( msg.s_header.s_type == status ) counter++;
-    } while ( counter < procs_to_wait );
+    } 
 }
 
 void send_status_to_all ( proc_t* proc, MessageType status ) {
@@ -112,9 +112,10 @@ void commit_transaction ( proc_t* proc, TransferOrder* trans ) {
 void children_routine ( proc_t* proc, char* buf ) {
     
     // Starting routine. Phase 1.
-    send_status_to_all ( proc, STARTED );
-    wait_for_all_messages ( proc, STARTED );
-    log_received_all_started ( proc );
+    //send_status_to_all ( proc, STARTED );
+    //wait_for_all_messages ( proc, STARTED );
+    send_status ( proc, PARENT_ID, STARTED );
+    //log_received_all_started ( proc );
 
     char ended = 0;
     int counter = 0;
@@ -149,9 +150,9 @@ void children_routine ( proc_t* proc, char* buf ) {
             // Phase 3
             case STOP:
                 DEBUG(printf("\tReceived STOP, id %d\n", proc->id));
-                send_status_to_all ( proc, STOP );
-                wait_for_all_messages ( proc, STOP );
-                DEBUG(printf("\tGot all STOPs %d\n", proc->id));
+                send_status_to_all ( proc, DONE );
+//                wait_for_all_messages ( proc, STOP );
+//                DEBUG(printf("\tGot all STOPs %d\n", proc->id));
                 /*for ( local_id from = 1; from < proc->process_count - 2; from++ ) {
                     if ( from != proc->id ) {
                         Message msg;
@@ -166,7 +167,7 @@ void children_routine ( proc_t* proc, char* buf ) {
                 }*/
                 //send_status_to_all ( proc, DONE );
                 //stopped = 1;
-                goto exit;
+     //           goto exit;
                 break;
             
             case DONE:
