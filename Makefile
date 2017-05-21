@@ -1,5 +1,5 @@
 CC       = clang
-CFLAGS   = -std=gnu99 -Wall -pedantic
+CFLAGS   = -std=c99 -Wall -pedantic
 
 ifeq ($(DEBUG_IPC),y)
    CFLAGS += -D_DEBUG_IPC_

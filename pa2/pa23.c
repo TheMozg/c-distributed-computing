@@ -1,3 +1,6 @@
+#ifdef _DEBUG_PA_
+#define _GNU_SOURCE
+#endif
 #include <stdlib.h>
 
 #include <argp.h>

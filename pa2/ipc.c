@@ -1,4 +1,5 @@
 #ifdef _DEBUG_IPC_
+    #define _GNU_SOURCE
     #include <stdio.h>
     #include <string.h>
 #endif
