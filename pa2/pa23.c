@@ -115,10 +115,7 @@ void commit_transaction ( proc_t* proc, TransferOrder* trans ) {
 void children_routine ( proc_t* proc, char* buf ) {
     
     // Starting routine. Phase 1.
-    //send_status_to_all ( proc, STARTED );
-    //wait_for_all_messages ( proc, STARTED );
     send_status ( proc, PARENT_ID, STARTED );
-    //log_received_all_started ( proc );
 
     char ended = 0;
     int counter = 0;
@@ -151,32 +148,15 @@ void children_routine ( proc_t* proc, char* buf ) {
                 break;
                 
             // Phase 3
+            // We use DONE message as a marker that this process finished all transactions
             case STOP:
                 DEBUG(printf("\tReceived STOP, id %d\n", proc->id));
-                send_status_to_all ( proc, DONE );
-//                wait_for_all_messages ( proc, STOP );
-//                DEBUG(printf("\tGot all STOPs %d\n", proc->id));
-                /*for ( local_id from = 1; from < proc->process_count - 2; from++ ) {
-                    if ( from != proc->id ) {
-                        Message msg;
-                        TransferOrder *trans;
-                        receive( proc, from, &msg );
-                        
-                        if ( msg.s_header.s_type == TRANSFER ) {
-                            trans = (TransferOrder*) msg.s_payload;
-                            commit_transaction( proc, trans );
-                        }
-                    }
-                }*/
-                //send_status_to_all ( proc, DONE );
-                //stopped = 1;
-     //           goto exit;
+                send_status_to_all ( proc, DONE ); 
                 break;
             
             case DONE:
                 DEBUG(printf("\tReceived DONE, id %d\n", proc->id));
-                //counter++;
-                //if( counter == proc->process_count - 2 ) goto exit;
+                counter++;
                 break;
 
             default:
@@ -184,8 +164,7 @@ void children_routine ( proc_t* proc, char* buf ) {
                 break;
         }
     }
-exit:
-    __asm__("nop");
+    
     //send_status_to_all ( proc, DONE );
     log_done ( proc );
     
