@@ -43,13 +43,9 @@ void transfer(void * parent_data, local_id src, local_id dst,
 
     Message msg_snd = create_message ( TRANSFER, &trans );
     
-    DEBUG(printf("\tSending transaction, src %d\n", src));
-
     while( send( parent_data, src, &msg_snd ) == -1 );
 
     Message msg_rcv;
-
-    DEBUG(printf("\tWaiting ACK, dst %d\n", dst));
 
     while( msg_rcv.s_header.s_type != ACK ) { // Waiting for ACK from dst
         receive( parent_data, dst, &msg_rcv );
@@ -86,7 +82,6 @@ void send_status ( proc_t* proc, local_id dst, MessageType status ) {
 
 void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
     if( trans->s_src == proc->id ) {
-        DEBUG(printf("\treceived TRANSFER src id %d\n", proc->id));
         proc->balance_state.s_balance -= trans->s_amount;
         proc->balance_state.s_time = get_physical_time();
 
@@ -100,7 +95,6 @@ void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
 
 void transaction_rcv ( proc_t* proc, TransferOrder* trans ) {
 	if( trans->s_dst == proc->id ) {
-	    DEBUG(printf("\tReceived TRANSFER dst id %d\n", proc->id));
 	    proc->balance_state.s_balance += trans->s_amount;
 	    proc->balance_state.s_time = get_physical_time();
 	
@@ -133,12 +127,16 @@ void children_routine ( proc_t* proc, char* buf ) {
         receive_any( proc, &msg );
             
         #ifdef _DEBUG_PA_
-        TransferOrder* test = (TransferOrder*) msg.s_payload;
-        printf("\t\t\tReceived transfer from %d to %d amount %d\n", test->s_src, test->s_dst, test->s_amount);
+        if (msg.s_header.s_type == TRANSFER ) {
+            TransferOrder* test = (TransferOrder*) msg.s_payload;
+            printf("\t\t\tReceived transfer from %d to %d amount %d\n", test->s_src, test->s_dst, test->s_amount);
+        }
         #endif
 
         MessageType status = msg.s_header.s_type;
         TransferOrder *trans;
+
+        int stopped = 0;
 
         switch( status ) {
             
@@ -151,48 +149,41 @@ void children_routine ( proc_t* proc, char* buf ) {
             // Phase 3
             case STOP:
                 DEBUG(printf("\tReceived STOP, id %d\n", proc->id));
-     //           send_status_to_all ( proc, DONE );
-    //            log_done ( proc );
-    //            ended = 1;
-     /*           int counter = 0;
-                while ( counter < proc->process_count - 2 ) {
+                send_status_to_all ( proc, STOP );
+                wait_for_all_messages ( proc, STOP );
+                DEBUG(printf("\tGot all STOPs %d\n", proc->id));
+                /*for ( local_id from = 1; from < proc->process_count - 2; from++ ) {
+                    if ( from != proc->id ) {
                         Message msg;
-                        receive_any( proc, &msg );
-                        DEBUG(printf("\tcounter %d, id %d\n", counter, proc->id));
-
-                        switch( msg.s_header.s_type ) {
-                            case DONE:
-                                DEBUG(printf("\tReceived DONE id %d\n", proc->id));
-                                counter++;
-                                break;
-
-                            case TRANSFER:
-                                DEBUG(printf("\tReceived remaining trans, id %d\n", proc->id));
-                                trans = (TransferOrder*) msg.s_payload;
-                                transaction_rcv( proc, trans );
-                                break;
-
-                            default:
-                                break;
+                        TransferOrder *trans;
+                        receive( proc, from, &msg );
+                        
+                        if ( msg.s_header.s_type == TRANSFER ) {
+                            trans = (TransferOrder*) msg.s_payload;
+                            commit_transaction( proc, trans );
                         }
-                }
-
-                log_received_all_done ( proc );*/
-                //ended = 0;
+                    }
+                }*/
+                //send_status_to_all ( proc, DONE );
+                //stopped = 1;
+                goto exit;
                 break;
             
             case DONE:
                 DEBUG(printf("\tReceived DONE, id %d\n", proc->id));
-                counter++;
+                //counter++;
+                //if( counter == proc->process_count - 2 ) goto exit;
+                break;
 
             default:
-                DEBUG(printf("\tReceived unexpected message, id %d\n", proc->id));
+                DEBUG(printf("\tReceived unexpected message, %d id %d\n", status, proc->id));
                 break;
         }
     }
-    
+exit:
+    __asm__("nop");
     //send_status_to_all ( proc, DONE );
-    //log_done ( proc );
+    log_done ( proc );
     
     //wait_for_all_messages ( proc, DONE );
     
