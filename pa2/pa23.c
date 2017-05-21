@@ -85,7 +85,7 @@ void send_status_to_all ( proc_t* proc, MessageType status ) {
 
 void send_status ( proc_t* proc, local_id dst, MessageType status ) {
     Message msg = create_message ( status, NULL );
-    send( proc, dst, &msg );
+    while( send( proc, dst, &msg ) == -1 );
 }
 
 void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
@@ -97,7 +97,7 @@ void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
 
         Message msg = create_message( TRANSFER, trans );
 
-        send ( proc, trans->s_dst, &msg );
+        while (send ( proc, trans->s_dst, &msg ) == -1);
     }
 }
 
