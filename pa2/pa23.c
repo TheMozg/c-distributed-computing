@@ -20,7 +20,7 @@
     #define DEBUG(x) __asm__("nop")
 #endif
 
-Message create_message ( MessageType type, void* contents ) {
+Message create_message ( MessageType type, void* contents, uint16_t size ) {
     Message msg;
 
     msg.s_header.s_magic = MESSAGE_MAGIC;
@@ -28,8 +28,8 @@ Message create_message ( MessageType type, void* contents ) {
     msg.s_header.s_type = type;
     msg.s_header.s_local_time = get_physical_time();
     if( contents != NULL ) {
-        msg.s_header.s_payload_len = strlen(contents);
-        memcpy(&(msg.s_payload), contents, strlen(contents));
+        msg.s_header.s_payload_len = size;
+        memcpy(&(msg.s_payload), contents, size);
     }
 
     return msg;
@@ -47,7 +47,7 @@ void transfer(void * parent_data, local_id src, local_id dst,
     trans.s_dst = dst;
     trans.s_amount = amount;
 
-    Message msg_snd = create_message ( TRANSFER, &trans );
+    Message msg_snd = create_message ( TRANSFER, &trans, sizeof(TransferOrder) );
     
     while( send( parent_data, src, &msg_snd ) == -1 );
 
@@ -79,12 +79,12 @@ void wait_for_all_messages ( proc_t* proc, MessageType status ) {
 }
 
 void send_status_to_all ( proc_t* proc, MessageType status ) {
-    Message msg = create_message ( status, NULL );
+    Message msg = create_message ( status, NULL, 0 );
     send_multicast( proc, &msg );
 }
 
 void send_status ( proc_t* proc, local_id dst, MessageType status ) {
-    Message msg = create_message ( status, NULL );
+    Message msg = create_message ( status, NULL, 0 );
     while( send( proc, dst, &msg ) == -1 );
 }
 
@@ -95,7 +95,7 @@ void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
 
         log_transfer_out( trans );
 
-        Message msg = create_message( TRANSFER, trans );
+        Message msg = create_message( TRANSFER, trans, sizeof(TransferOrder) );
 
         while (send ( proc, trans->s_dst, &msg ) == -1);
     }
@@ -107,7 +107,7 @@ void transaction_rcv ( proc_t* proc, TransferOrder* trans ) {
 	    proc->balance_state.s_time = get_physical_time();
 	
 	    log_transfer_in( trans );
-	    
+
 	    send_status ( proc, PARENT_ID, ACK );
 	}
 }
@@ -131,16 +131,10 @@ void children_routine ( proc_t* proc, char* buf ) {
         Message msg;
 
         receive_any( proc, &msg );
-            
-        #ifdef _DEBUG_PA_
-        if (msg.s_header.s_type == TRANSFER ) {
-            TransferOrder* test = (TransferOrder*) msg.s_payload;
-            printf("\t\t\tReceived transfer from %d to %d amount %d\n", test->s_src, test->s_dst, test->s_amount);
-        }
-        #endif
 
         MessageType status = msg.s_header.s_type;
-        TransferOrder *trans;
+
+        TransferOrder trans;
 
         int stopped = 0;
 
@@ -148,8 +142,13 @@ void children_routine ( proc_t* proc, char* buf ) {
             
             // Phase 2
             case TRANSFER:
-                trans = (TransferOrder*) msg.s_payload;
-                commit_transaction( proc, trans );
+                memcpy(&trans, &(msg.s_payload), sizeof(TransferOrder));
+                #ifdef _DEBUG_PA_
+                printf("\t\tReceived transfer from %d to %d amount %d\n", trans.s_src, trans.s_dst, trans.s_amount);
+                printf("\t\tPayload length %d\n", msg.s_header.s_payload_len);
+                printf("\t\tSizeof order %lu\n", sizeof(TransferOrder));
+                #endif
+                commit_transaction( proc, &trans );
                 break;
                 
             // Phase 3

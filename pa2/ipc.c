@@ -1,11 +1,11 @@
 #ifdef _DEBUG_IPC_
     #define _GNU_SOURCE
-    #include <stdio.h>
     #include <string.h>
 #endif
 
 #include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "ipc.h"
 #include "proc.h"
@@ -53,12 +53,16 @@ int send_multicast(void * self, const Message * msg) {
 int receive(void * self, local_id from, Message * msg) {
     proc_t * proc = self;
 
-    // Checks for errors from read. Mostly to avoid EBADF.
-    while( read(proc->fd_read[proc->id][from], NULL, 0) == -1 ); 
-
     int status = read(proc->fd_read[proc->id][from], msg, sizeof(MessageHeader));
-    if (status == sizeof(MessageHeader))
-        read(proc->fd_read[proc->id][from], msg->s_payload, msg->s_header.s_payload_len);
+    if (status != sizeof(MessageHeader) && status != -1 && status != 0){
+        fprintf(stderr, "Critial error: partial receive (message header) - expected %lu bytes, got %d.\n", sizeof(MessageHeader), status);
+    }
+    if (status == sizeof(MessageHeader) && msg->s_header.s_payload_len != 0){
+        int payload_status = read(proc->fd_read[proc->id][from], msg->s_payload, msg->s_header.s_payload_len);
+        if (payload_status != msg->s_header.s_payload_len){
+            fprintf(stderr, "Critial error: partial receive (message payload) - expected %hu bytes, got %d.\n", msg->s_header.s_payload_len, status);
+        }
+    }
 
     #ifdef _DEBUG_IPC_
     if (status == -1) {
@@ -68,7 +72,7 @@ int receive(void * self, local_id from, Message * msg) {
     }
     #endif
 
-    return (status != -1) ? 0 : -1;
+    return (status == -1 || status == 0) ? -1 : 0;
 }
 
 /*
