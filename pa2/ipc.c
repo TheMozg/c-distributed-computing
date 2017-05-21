@@ -56,7 +56,9 @@ int receive(void * self, local_id from, Message * msg) {
     // Checks for errors from read. Mostly to avoid EBADF.
     while( read(proc->fd_read[proc->id][from], NULL, 0) == -1 ); 
 
-    int status = read(proc->fd_read[proc->id][from], msg, sizeof(Message));
+    int status = read(proc->fd_read[proc->id][from], msg, sizeof(MessageHeader));
+    if (status == sizeof(MessageHeader))
+        read(proc->fd_read[proc->id][from], msg->s_payload, msg->s_header.s_payload_len);
 
     #ifdef _DEBUG_IPC_
     if (status == -1) {
