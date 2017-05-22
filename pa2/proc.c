@@ -92,8 +92,6 @@ char* spawn_procs ( proc_t* proc, balance_t* balance ) {
                 proc->b_state.s_balance = balance[i - 1];
                 proc->b_state.s_balance_pending_in = 0;
 
-                memset(proc->b_history.s_history, 0, sizeof(proc->b_history.s_history) );
-
                 proc->b_history.s_history[0] = proc->b_state;
                 proc->b_history.s_history_len = 1;
                 proc->b_history.s_id = proc->id;
