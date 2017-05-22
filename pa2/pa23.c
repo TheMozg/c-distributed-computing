@@ -187,43 +187,7 @@ void children_routine ( proc_t* proc, char* buf ) {
     add_balance_state_to_history(&(proc->b_history), proc->b_state);
 
     log_done ( proc );
-/*
-    timestamp_t t = 0;
-
-    BalanceState sub = proc->b_history.s_history[t];
-    BalanceState temp;
-
-    for( t = 1 ; t < end_time; t++ ) {
-        temp = proc->b_history.s_history[t];
-        if ( temp.s_time == t && sub.s_time != temp.s_time ) {
-            sub = temp;
-        } else {
-            sub.s_time = t;
-            proc->b_history.s_history_len++;
-            proc->b_history.s_history[t] = sub;
-        }
-    }*/
-    /*for( int t = last_trns_time + 1; t < end_time; t++ ) {
-            DEBUG(printf("Filling in id %d\n", proc->id));
-            proc->b_history.s_history[t] = proc->b_history.s_history[last_trns_time];
-            proc->b_history.s_history[t].s_time = t;
-            proc->b_history.s_history_len++;
-    }*/
-    //Closing balance history by filling between balance changes
-
-
-    
-    /*for( t = 1 ; t < end_time; t++ ) {
-        temp = proc->b_history.s_history[t];
-        if ( temp.s_time == t && sub.s_time != temp.s_time ) {
-            sub = temp;
-        } else if (temp.s_time ==0 ){
-            sub.s_time = t;
-            proc->b_history.s_history_len++;
-            proc->b_history.s_history[t] = sub;
-        }
-    }*/
-    
+   
     // Sending balance history to parent
     Message b_msg = create_message ( BALANCE_HISTORY, &proc->b_history, 
             (proc->b_history.s_history_len) * sizeof(BalanceState) + 
@@ -269,7 +233,6 @@ void parent_routine ( proc_t* proc ) {
                         temp.s_id, temp.s_history[i].s_time, temp.s_history[i].s_balance, temp.s_history_len);
             }
             #endif
-            //memcpy(&history.s_history[temp.s_id - 1], &(msg.s_payload), sizeof(msg.s_payload));
         }
     }
     DEBUG(printf("\tAllHistory len %d\n", history.s_history_len));
