@@ -41,6 +41,7 @@ endef
 
 $(eval $(call INIT_PROJECT_RULES,pa1))
 $(eval $(call INIT_PROJECT_RULES,pa2,-L./pa2 -lruntime))
+$(eval $(call INIT_PROJECT_RULES,pa3,-L./pa3 -lruntime))
 
 .PHONY: clean
 clean:
