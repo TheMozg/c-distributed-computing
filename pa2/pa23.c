@@ -35,13 +35,6 @@ Message create_message ( MessageType type, void* contents, uint16_t size ) {
     return msg;
 }
 
-// Receives messages until received message with given status
-void receive_status( void* parent_data, local_id dst, Message* msg, MessageType status ) {
-    do {
-        receive( parent_data, dst, msg );
-    } while ( msg->s_header.s_type != status );
-}
-
 void transfer(void * parent_data, local_id src, local_id dst,
               balance_t amount) {
 
@@ -62,7 +55,9 @@ void transfer(void * parent_data, local_id src, local_id dst,
     Message msg_rcv;
 
     // Waiting for ACK from dst
-    receive_status( proc, dst, &msg_rcv, ACK ); 
+    do {
+        receive( parent_data, dst, &msg_rcv );
+    } while ( msg_rcv.s_header.s_type != ACK );
     log_transfer_in( &trans );
 
 }
@@ -244,8 +239,8 @@ void parent_routine ( proc_t* proc ) {
             #ifdef _DEBUG_PA_
             for ( local_id i = 0; i < proc->process_count; i++ ) {
                 BalanceState tmp = temp.s_history[i];
-                printf("\tHISTORY ID %d T %d AM %d len %d %d\n",
-                        temp.s_id, tmp.s_time, tmp.s_balance, temp.s_history_len, tmp.s_balance_pending_in);
+                printf("\tHISTORY ID %d T %d AM %d len %d\n",
+                        temp.s_id, temp.s_history[i].s_time, temp.s_history[i].s_balance, temp.s_history_len);
             }
             #endif
             //memcpy(&history.s_history[temp.s_id - 1], &(msg.s_payload), sizeof(msg.s_payload));
