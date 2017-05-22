@@ -93,7 +93,7 @@ int receive(void * self, local_id from, Message * msg) {
 }
 
 /*
- * Doing receive cycling through ids until something is read.
+ * Doing read cycling through ids until something is read.
  * Do not receive messages from process itself.
  */
 int receive_any(void * self, Message * msg) {
