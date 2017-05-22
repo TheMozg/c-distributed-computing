@@ -297,8 +297,8 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
     {
     case 'p':
         args->process_count = atoi(arg);
-        if (args->process_count < 0 || args->process_count > MAX_PROCESS_ID){
-            argp_failure(state, 1, 0,"PROCESS_COUNT must be between 0 and %d",MAX_PROCESS_ID);
+        if (args->process_count < 2 || args->process_count > MAX_PROCESS_ID){
+            argp_failure(state, 1, 0,"PROCESS_COUNT must be between 2 and %d",MAX_PROCESS_ID);
         }
         break;
 
