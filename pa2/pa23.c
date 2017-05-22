@@ -3,7 +3,6 @@
 #endif
 #include <stdlib.h>
 
-#include <argp.h>
 #include <sys/wait.h>
 #include <string.h>
 
@@ -11,6 +10,13 @@
 #include "ipc.h"
 #include "proc.h"
 #include "logger.h"
+
+/*
+argp.h is broken in ubuntu 14.04
+it may # define __attribute__(Spec)
+workaround is to include it after other headers
+*/
+#include <argp.h>
 
 #ifdef _DEBUG_PA_
     #include <stdio.h>
