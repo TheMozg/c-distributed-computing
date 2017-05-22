@@ -35,6 +35,13 @@ Message create_message ( MessageType type, void* contents, uint16_t size ) {
     return msg;
 }
 
+// Receives messages until received message with given status
+void receive_status( void* parent_data, local_id dst, Message* msg, MessageType status ) {
+    do {
+        receive( parent_data, dst, msg );
+    } while ( msg->s_header.s_type != status );
+}
+
 void transfer(void * parent_data, local_id src, local_id dst,
               balance_t amount) {
 
@@ -50,14 +57,14 @@ void transfer(void * parent_data, local_id src, local_id dst,
     Message msg_snd = create_message ( TRANSFER, &trans, sizeof(TransferOrder) );
     
     while( send( parent_data, src, &msg_snd ) == -1 );
+    log_transfer_out( &trans );
 
     Message msg_rcv;
 
-    do { // Waiting for ACK from dst
-        receive( parent_data, dst, &msg_rcv );
-    } while( msg_rcv.s_header.s_type != ACK );
+    // Waiting for ACK from dst
+    receive_status( proc, dst, &msg_rcv, ACK ); 
+    log_transfer_in( &trans );
 
-    DEBUG(printf("\tTRANSACTION DONE src %d dst %d\n", src, dst));
 }
 
 void wait_for_all_messages ( proc_t* proc, MessageType status ) {
@@ -88,33 +95,37 @@ void send_status ( proc_t* proc, local_id dst, MessageType status ) {
     while( send( proc, dst, &msg ) == -1 );
 }
 
-void transaction_snd ( proc_t* proc, TransferOrder* trans ) {
+void transaction_snd ( proc_t* proc, TransferOrder* trans, timestamp_t now ) {
     if( trans->s_src == proc->id ) {
-        proc->balance_state.s_balance -= trans->s_amount;
-        proc->balance_state.s_time = get_physical_time();
 
-        log_transfer_out( trans );
+        proc->b_state.s_balance -= trans->s_amount;
 
+        proc->b_history.s_history[now] = proc->b_state;
         Message msg = create_message( TRANSFER, trans, sizeof(TransferOrder) );
-
+        
         while (send ( proc, trans->s_dst, &msg ) == -1);
     }
 }
 
-void transaction_rcv ( proc_t* proc, TransferOrder* trans ) {
+void transaction_rcv ( proc_t* proc, TransferOrder* trans, timestamp_t now ) {
 	if( trans->s_dst == proc->id ) {
-	    proc->balance_state.s_balance += trans->s_amount;
-	    proc->balance_state.s_time = get_physical_time();
+
+	    proc->b_state.s_balance += trans->s_amount;
 	
-	    log_transfer_in( trans );
+        proc->b_history.s_history[now] = proc->b_state;
 
 	    send_status ( proc, PARENT_ID, ACK );
 	}
 }
 
 void commit_transaction ( proc_t* proc, TransferOrder* trans ) {
-    transaction_snd ( proc, trans );
-    transaction_rcv ( proc, trans );
+    timestamp_t now = get_physical_time();
+	proc->b_state.s_time = now;
+
+    transaction_snd ( proc, trans, now );
+    transaction_rcv ( proc, trans, now );
+
+    proc->b_history.s_history_len++;
 }
 
 void children_routine ( proc_t* proc, char* buf ) {
@@ -122,11 +133,17 @@ void children_routine ( proc_t* proc, char* buf ) {
     // Starting routine. Phase 1.
     send_status ( proc, PARENT_ID, STARTED );
 
-    char ended = 0;
-    int counter = 0;
+    /*
+     * Counter for phases 2 and 3.
+     * When received DONE from all other child processes
+     * stop receiving new TRANSFER and STOP messages.
+     */
+    int done_counter = 0;
+
+    timestamp_t end_time = 0;
 
     // Main routine
-    while( counter < proc->process_count - 2 ) {
+    while( done_counter < proc->process_count - 2 ) { 
 
         Message msg;
 
@@ -134,46 +151,66 @@ void children_routine ( proc_t* proc, char* buf ) {
 
         MessageType status = msg.s_header.s_type;
 
-        TransferOrder trans;
-
-        int stopped = 0;
-
         switch( status ) {
             
             // Phase 2
-            case TRANSFER:
+            case TRANSFER: {
+                TransferOrder trans;
                 memcpy(&trans, &(msg.s_payload), sizeof(TransferOrder));
                 #ifdef _DEBUG_PA_
-                printf("\t\tReceived transfer from %d to %d amount %d\n", trans.s_src, trans.s_dst, trans.s_amount);
-                printf("\t\tPayload length %d\n", msg.s_header.s_payload_len);
-                printf("\t\tSizeof order %lu\n", sizeof(TransferOrder));
+                printf("\t\t\t\tReceived transfer from %d to %d amount %d\n", trans.s_src, trans.s_dst, trans.s_amount);
+                printf("\t\t\t\tPayload length %d\n", msg.s_header.s_payload_len);
+                printf("\t\t\t\tSizeof order %lu\n", sizeof(TransferOrder));
                 #endif
                 commit_transaction( proc, &trans );
                 break;
-                
+            }
+
             // Phase 3
             // We use DONE message as a marker that this process finished all transactions
             case STOP:
-                DEBUG(printf("\tReceived STOP, id %d\n", proc->id));
                 send_status_to_all ( proc, DONE ); 
-                break;
+                end_time = get_physical_time();
+                DEBUG(printf("id %d ended %d\n", proc->id, end_time));
+                break; 
             
             case DONE:
-                DEBUG(printf("\tReceived DONE, id %d\n", proc->id));
-                counter++;
+                done_counter++;
                 break;
 
             default:
-                DEBUG(printf("\tReceived unexpected message, %d id %d\n", status, proc->id));
                 break;
         }
     }
-    
-    //send_status_to_all ( proc, DONE );
+
     log_done ( proc );
+
+    //Closing balance history by filling between balance changes
+    timestamp_t t = 0;
+
+    BalanceState sub = proc->b_history.s_history[t];
+    BalanceState temp;
+
+    proc->b_history.s_history[end_time] = proc->b_state;
+    for( t = 1 ; t <= end_time; t++ ) {
+        temp = proc->b_history.s_history[t];
+        if ( temp.s_time == t && sub.s_time != temp.s_time ) {
+            sub = temp;
+        } else {
+            sub.s_time = t;
+            proc->b_history.s_history_len++;
+            proc->b_history.s_history[t] = sub;
+        }
+    }
     
-    //wait_for_all_messages ( proc, DONE );
-    
+    // Sending balance history to parent
+    Message b_msg = create_message ( BALANCE_HISTORY, &proc->b_history, 
+            (proc->b_history.s_history_len) * sizeof(BalanceState) + 
+            sizeof(proc->b_history.s_history_len) + 
+            sizeof(proc->b_history.s_id));
+
+    //Message b_msg = create_message ( BALANCE_HISTORY, &proc->b_history, sizeof(BalanceHistory) );
+    while( send( proc, PARENT_ID, &b_msg ) == -1 );
 }
 
 void parent_routine ( proc_t* proc ) {
@@ -190,6 +227,33 @@ void parent_routine ( proc_t* proc ) {
     wait_for_all_messages ( proc, DONE );
     log_received_all_done ( proc );
 
+    AllHistory history;
+    history.s_history_len = 0;
+
+    while( history.s_history_len < proc->process_count - 1 ) {
+        Message msg;
+        receive_any( proc, &msg );
+
+        if( msg.s_header.s_type == BALANCE_HISTORY ) {
+
+            BalanceHistory temp;
+            memcpy(&temp, &(msg.s_payload), sizeof(msg.s_payload));
+            history.s_history_len++;
+            DEBUG(printf("\tReceived BALANCE_HISTORY from %d\n", temp.s_id));
+            history.s_history[temp.s_id - 1] = temp;
+            #ifdef _DEBUG_PA_
+            for ( local_id i = 0; i < proc->process_count; i++ ) {
+                BalanceState tmp = temp.s_history[i];
+                printf("\tHISTORY ID %d T %d AM %d len %d %d\n",
+                        temp.s_id, tmp.s_time, tmp.s_balance, temp.s_history_len, tmp.s_balance_pending_in);
+            }
+            #endif
+            //memcpy(&history.s_history[temp.s_id - 1], &(msg.s_payload), sizeof(msg.s_payload));
+        }
+    }
+    DEBUG(printf("\tAllHistory len %d\n", history.s_history_len));
+
+    print_history( &history );
     while( wait(NULL) > 0 ); // Wait for all children to stop
     close_log();
 }
@@ -239,7 +303,6 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, 0, doc };
 
 int main(int argc, char * argv[]) {
-    //print_history(all);
 
     args_t args;
     argp_parse (&argp, argc, argv, 0, 0, &args);

@@ -11,8 +11,8 @@ typedef struct {
     local_id  process_count;
     int       **fd_read;
     int       **fd_writ;
-    BalanceState    balance_state;
-    BalanceHistory  balance_history;
+    BalanceState    b_state;
+    BalanceHistory  b_history;
 } proc_t;
 
 int close_fd ( local_id id, int fd );

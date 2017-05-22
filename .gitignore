@@ -1,3 +1,4 @@
+sc.sh
 *.log
 .*.sw?
 bin/

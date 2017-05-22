@@ -67,11 +67,11 @@ char* log_output ( int fd, const char *format, ... ) {
 
 char* log_started ( proc_t* proc, pid_t pid, pid_t parent ) {
     return log_output( fd_event, log_started_fmt, get_physical_time(), proc->id,
-            pid, parent, proc->balance_state.s_balance );
+            pid, parent, proc->b_state.s_balance );
 }
 
 char* log_done ( proc_t* proc ) {
-    return log_output( fd_event, log_done_fmt, get_physical_time(), proc->id, proc->balance_state.s_balance );
+    return log_output( fd_event, log_done_fmt, get_physical_time(), proc->id, proc->b_state.s_balance );
 }
 
 void log_received_all_started ( proc_t* proc ) {

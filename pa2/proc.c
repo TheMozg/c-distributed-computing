@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -74,15 +75,29 @@ void close_unused_pipes ( proc_t* proc ) {
     }
 }
 
-// Spawn child processes. Here fork() happens.
+/*
+ * Spawn child processes. Here fork() happens.
+ *
+ * It is better to keep balance separate,
+ * but because of nature of task and small
+ * values we keep it in proc_t struct
+ */
 char* spawn_procs ( proc_t* proc, balance_t* balance ) {
     for ( local_id i = 0; i < proc->process_count; i++ ) {
         if ( i != PARENT_ID && proc->id == PARENT_ID ) {
             pid_t pid = fork();
             if ( pid == 0 ) {
                 proc->id = i;
-                proc->balance_state.s_time = get_physical_time();
-                proc->balance_state.s_balance = balance[i - 1];
+                proc->b_state.s_time = 0;
+                proc->b_state.s_balance = balance[i - 1];
+                proc->b_state.s_balance_pending_in = 0;
+
+                memset(proc->b_history.s_history, 0, sizeof(proc->b_history.s_history) );
+
+                proc->b_history.s_history[0] = proc->b_state;
+                proc->b_history.s_history_len = 1;
+                proc->b_history.s_id = proc->id;
+
                 return log_started( proc, getpid(), getppid() );
             }
         }
