@@ -59,11 +59,12 @@ void transfer(void * parent_data, local_id src, local_id dst,
     log_transfer_out( &trans );
 
     Message msg_rcv;
+    msg_rcv.s_header.s_type = STARTED;
 
     // Waiting for ACK from dst
-    do {
+    while ( msg_rcv.s_header.s_type != ACK ) {
         receive( parent_data, dst, &msg_rcv );
-    } while ( msg_rcv.s_header.s_type != ACK );
+    }
 
     log_transfer_in( &trans );
 
