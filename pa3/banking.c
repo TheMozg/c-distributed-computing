@@ -18,10 +18,10 @@ void transfer(void * parent_data, local_id src, local_id dst,
     trans.s_dst = dst;
     trans.s_amount = amount;
 
-    Message msg_snd = create_message ( TRANSFER, &trans, sizeof(TransferOrder) );
+    Message msg_snd = create_message ( proc, TRANSFER, &trans, sizeof(TransferOrder) );
     
     while( send( parent_data, src, &msg_snd ) == -1 );
-    log_transfer_out( &trans );
+    log_transfer_out( proc, &trans );
 
     Message msg_rcv;
 
@@ -30,7 +30,7 @@ void transfer(void * parent_data, local_id src, local_id dst,
         receive( parent_data, dst, &msg_rcv );
     } while ( msg_rcv.s_header.s_type != ACK );
 
-    log_transfer_in( &trans );
+    log_transfer_in( proc, &trans );
 
 }
 

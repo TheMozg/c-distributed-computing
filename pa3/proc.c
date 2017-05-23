@@ -84,11 +84,11 @@ void close_unused_pipes ( proc_t* proc ) {
  */
 char* spawn_procs ( proc_t* proc, balance_t* balance ) {
     for ( local_id i = 0; i < proc->process_count; i++ ) {
+        proc->b_state.s_time = 0;
         if ( i != PARENT_ID && proc->id == PARENT_ID ) {
             pid_t pid = fork();
             if ( pid == 0 ) {
                 proc->id = i;
-                proc->b_state.s_time = 0;
                 proc->b_state.s_balance = balance[i - 1];
                 proc->b_state.s_balance_pending_in = 0;
 

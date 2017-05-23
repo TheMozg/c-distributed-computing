@@ -5,7 +5,7 @@
 #include "proc.h"
 #include "messaging.h"
 
-Message create_message ( MessageType type, void* contents, uint16_t size );
+Message create_message ( proc_t* proc, MessageType type, void* contents, uint16_t size );
 
 void wait_for_all_messages ( proc_t* proc, MessageType status );
 

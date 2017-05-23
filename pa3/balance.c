@@ -21,8 +21,6 @@ void add_balance_state_to_history (BalanceHistory* history, BalanceState state) 
 }
 
 void commit_transaction ( proc_t* proc, Message* msg ) {
-    proc->b_state.s_time = get_physical_time();
-
     TransferOrder* trans = (TransferOrder*)msg->s_payload;
 
     if( trans->s_src == proc->id ) {

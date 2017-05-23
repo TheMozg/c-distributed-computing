@@ -33,7 +33,7 @@ void log_created_pipe ( local_id id, int* fd );
 
 void log_closed_fd ( local_id id, int fd );
 
-void log_transfer_out ( TransferOrder* trans );
+void log_transfer_out ( proc_t* proc, TransferOrder* trans );
 
-void log_transfer_in ( TransferOrder* trans );
+void log_transfer_in ( proc_t* proc, TransferOrder* trans );
 #endif //_LOGER_H_

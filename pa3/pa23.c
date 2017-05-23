@@ -40,8 +40,6 @@ void children_routine ( proc_t* proc, char* buf ) {
      */
     int done_counter = 0;
 
-    timestamp_t end_time = 0;
-
     // Main routine
     while( done_counter < proc->process_count - 2 ) { 
 
@@ -70,8 +68,6 @@ void children_routine ( proc_t* proc, char* buf ) {
             // We use DONE message as a marker that this process finished all transactions
             case STOP:
                 send_status_to_all ( proc, DONE ); 
-                end_time = get_physical_time();
-                DEBUG(printf("id %d ended %d\n", proc->id, end_time));
                 break; 
             
             case DONE:
@@ -84,18 +80,16 @@ void children_routine ( proc_t* proc, char* buf ) {
     }
 
     proc->b_state = proc->b_history.s_history[proc->b_history.s_history_len-1];
-    proc->b_state.s_time = end_time;
     add_balance_state_to_history(&(proc->b_history), proc->b_state);
 
     log_done ( proc );
    
     // Sending balance history to parent
-    Message b_msg = create_message ( BALANCE_HISTORY, &proc->b_history, 
+    Message b_msg = create_message ( proc, BALANCE_HISTORY, &proc->b_history, 
             (proc->b_history.s_history_len) * sizeof(BalanceState) + 
             sizeof(proc->b_history.s_history_len) + 
             sizeof(proc->b_history.s_id));
 
-    //Message b_msg = create_message ( BALANCE_HISTORY, &proc->b_history, sizeof(BalanceHistory) );
     while( send( proc, PARENT_ID, &b_msg ) == -1 );
 }
 
@@ -127,13 +121,6 @@ void parent_routine ( proc_t* proc ) {
             DEBUG(printf("\tReceived BALANCE_HISTORY from %d\n", temp.s_id));
             history.s_history[temp.s_id - 1] = temp;
             history.s_history_len++;
-            #ifdef _DEBUG_PA_
-            timestamp_t now = get_physical_time();
-            for ( local_id i = 0; i <= now; i++ ) {
-                printf("\tHISTORY ID %d T %d AM %d len %d\n",
-                        temp.s_id, temp.s_history[i].s_time, temp.s_history[i].s_balance, temp.s_history_len);
-            }
-            #endif
         }
     }
     DEBUG(printf("\tAllHistory len %d\n", history.s_history_len));
