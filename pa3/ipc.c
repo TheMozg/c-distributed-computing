@@ -10,9 +10,6 @@
 #include "ipc.h"
 #include "proc.h"
 
-#ifdef _DEBUG_IPC_
-    #define FAIL_SLEEP 10000
-#endif
 /*
  * O_NONBLOCK enabled, n <= PIPE_BUF (n in theory is always less 
  * than PIPE_BUF because PIPE_BUF is 16 pages, so our msg struct
@@ -24,6 +21,8 @@
 
 int send(void * self, local_id dst, const Message * msg) {
     proc_t * proc = self;
+    //fprintf(stderr, "T.%d, P.%d -> P.%d sent TS.%d\n", proc->b_state.s_time, proc->id,dst, msg->s_header.s_local_time);
+
     int status = write(proc->fd_writ[proc->id][dst], msg, sizeof(MessageHeader) + msg->s_header.s_payload_len);
     return (status != -1) ? 0 : -1;
 }

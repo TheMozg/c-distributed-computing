@@ -26,7 +26,8 @@ void commit_transaction ( proc_t* proc, Message* msg ) {
     if( trans->s_src == proc->id ) {
         proc->b_state.s_balance -= trans->s_amount;
         add_balance_state_to_history(&(proc->b_history), proc->b_state);
-        while (send ( proc, trans->s_dst, msg ) == -1);
+        Message msg_fwd = create_message ( proc, TRANSFER, trans, sizeof(TransferOrder) );
+        while (send ( proc, trans->s_dst, &msg_fwd ) == -1);
     }
 
     if( trans->s_dst == proc->id ) {
