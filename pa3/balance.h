@@ -4,6 +4,6 @@
 #include "proc.h"
 #include "messaging.h"
 
-void add_balance_state_to_history (BalanceHistory* history, BalanceState state);
+void add_balance_state_to_history ( BalanceHistory* history, BalanceState state, timestamp_t fill_time );
 void commit_transaction ( proc_t* proc, Message* msg );
 #endif // _BALANCE_H_

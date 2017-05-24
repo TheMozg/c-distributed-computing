@@ -82,7 +82,7 @@ void close_unused_pipes ( proc_t* proc ) {
  * but because of nature of task and small
  * values we keep it in proc_t struct
  */
-char* spawn_procs ( proc_t* proc, balance_t* balance ) {
+void spawn_procs ( proc_t* proc, balance_t* balance ) {
     for ( local_id i = 0; i < proc->process_count; i++ ) {
         proc->b_state.s_time = 0;
         if ( i != PARENT_ID && proc->id == PARENT_ID ) {
@@ -96,15 +96,14 @@ char* spawn_procs ( proc_t* proc, balance_t* balance ) {
                 proc->b_history.s_history_len = 1;
                 proc->b_history.s_id = proc->id;
 
-                return log_started( proc, getpid(), getppid() );
+                log_started( proc, getpid(), getppid() );
             }
         }
     }
-    return NULL;
 }
 
 // Create pipes and child processes
-char* start_procs ( proc_t* proc, int process_count, balance_t* balance ) {
+void start_procs ( proc_t* proc, int process_count, balance_t* balance ) {
 
     // Init parent
     init_parent ( proc, process_count );
@@ -116,11 +115,10 @@ char* start_procs ( proc_t* proc, int process_count, balance_t* balance ) {
     create_all_pipes ( proc );
 
     // Spawn child processes. Here fork() happens.
-    char * buf = spawn_procs ( proc, balance );
+    spawn_procs ( proc, balance );
 
     // Close unused fd
     close_unused_pipes ( proc );
 
-    return buf;
 }
 

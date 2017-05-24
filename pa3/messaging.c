@@ -1,14 +1,21 @@
 #include <stdio.h>
 #include <string.h>
-#include "logger.h"
 
+#include "logger.h"
+#include "banking.h"
+#include "lamport.h"
+
+/*
+ * Here we increment Lamport time
+ * One more increment is in receive() in ipc.c
+ */
 Message create_message ( proc_t* proc, MessageType type, void* contents, uint16_t size ) {
-    proc->b_state.s_time++;
+    proc->b_state.s_time = get_inc_l_time( );
     Message msg;
     msg.s_header.s_magic = MESSAGE_MAGIC;
     msg.s_header.s_payload_len = 0;
     msg.s_header.s_type = type;
-    msg.s_header.s_local_time = proc->b_state.s_time;
+    msg.s_header.s_local_time = get_lamport_time( );
     if( contents != NULL ) {
         msg.s_header.s_payload_len = size;
         memcpy(&(msg.s_payload), contents, size);

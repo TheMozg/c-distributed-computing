@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "messaging.h"
 #include "balance.h"
+#include "lamport.h"
 
 /*
 argp.h is broken in ubuntu 14.04
@@ -28,11 +29,10 @@ workaround is to include it after other headers
     #define DEBUG(x) __asm__("nop")
 #endif
 
-void children_routine ( proc_t* proc, char* buf ) {
+void children_routine ( proc_t* proc ) {
     
     // Starting routine. Phase 1.
     send_status( proc, PARENT_ID, STARTED );
-
     /*
      * Counter for phases 2 and 3.
      * When received DONE from all other child processes
@@ -79,8 +79,11 @@ void children_routine ( proc_t* proc, char* buf ) {
         }
     }
 
-    proc->b_state = proc->b_history.s_history[proc->b_history.s_history_len-1];
-    add_balance_state_to_history(&(proc->b_history), proc->b_state);
+    // Close balance
+    proc->b_state = proc->b_history.s_history[proc->b_history.s_history_len - 1];
+    proc->b_state.s_time = get_lamport_time( );
+    proc->b_state.s_balance_pending_in = 0;
+    add_balance_state_to_history(&(proc->b_history), proc->b_state, get_lamport_time());
 
     log_done ( proc );
    
@@ -94,12 +97,13 @@ void children_routine ( proc_t* proc, char* buf ) {
 }
 
 void parent_routine ( proc_t* proc ) {
-    wait_for_all_messages ( proc, STARTED );
+    wait_for_all_messages( proc, STARTED );
 
     log_received_all_started ( proc );
 
     // Do robbery after all STARTED messages received
     bank_robbery( proc, proc->process_count - 1 );
+
     DEBUG(printf("\t\t--BANK IS ROBBED--\n"));
 
     send_status_to_all ( proc, STOP );
@@ -121,6 +125,14 @@ void parent_routine ( proc_t* proc ) {
             DEBUG(printf("\tReceived BALANCE_HISTORY from %d\n", temp.s_id));
             history.s_history[temp.s_id - 1] = temp;
             history.s_history_len++;
+
+            #ifdef _DEBUG_PA_
+            timestamp_t now = get_lamport_time();
+            for ( local_id i = 0; i <= now; i++ ) {
+                printf("\tHISTORY ID %d T %d AM %d len %d\n",
+                        temp.s_id, temp.s_history[i].s_time, temp.s_history[i].s_balance, temp.s_history_len);
+            }
+            #endif
         }
     }
     DEBUG(printf("\tAllHistory len %d\n", history.s_history_len));
@@ -193,13 +205,11 @@ int main(int argc, char * argv[]) {
     proc_t this_process;
  
     // PARENT_ID does not have to be 0
-    char * buf = start_procs( &this_process, process_count, balance );
+    start_procs( &this_process, process_count, balance );
 
     if (this_process.id != PARENT_ID) {
-        children_routine ( &this_process, buf );
+        children_routine ( &this_process );
     } else parent_routine ( &this_process );
-
-    free(buf);
 
     return 0;
 }

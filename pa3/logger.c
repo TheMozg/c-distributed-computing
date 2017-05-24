@@ -66,20 +66,20 @@ char* log_output ( int fd, const char *format, ... ) {
 }
 
 char* log_started ( proc_t* proc, pid_t pid, pid_t parent ) {
-    return log_output( fd_event, log_started_fmt, proc->b_state.s_time, proc->id,
+    return log_output( fd_event, log_started_fmt, get_lamport_time(), proc->id,
             pid, parent, proc->b_state.s_balance );
 }
 
 char* log_done ( proc_t* proc ) {
-    return log_output( fd_event, log_done_fmt, proc->b_state.s_time, proc->id, proc->b_state.s_balance );
+    return log_output( fd_event, log_done_fmt, get_lamport_time(), proc->id, proc->b_state.s_balance );
 }
 
 void log_received_all_started ( proc_t* proc ) {
-    log_output( fd_event, log_received_all_started_fmt, proc->b_state.s_time, proc->id );
+    log_output( fd_event, log_received_all_started_fmt, get_lamport_time(), proc->id );
 }
 
 void log_received_all_done ( proc_t* proc ) {
-    log_output( fd_event, log_received_all_done_fmt, proc->b_state.s_time, proc->id );
+    log_output( fd_event, log_received_all_done_fmt, get_lamport_time(), proc->id );
 }
 
 void log_created_pipe ( local_id id, int* fd ) {
@@ -91,11 +91,11 @@ void log_closed_fd ( local_id id, int fd ) {
 }
 
 void log_transfer_out ( proc_t* proc, TransferOrder* trans ) {
-    log_output( fd_event, log_transfer_out_fmt, proc->b_state.s_time,
+    log_output( fd_event, log_transfer_out_fmt, get_lamport_time(),
             trans->s_src, trans->s_amount, trans->s_dst );
 }
 
 void log_transfer_in ( proc_t* proc, TransferOrder* trans ) {
-    log_output( fd_event, log_transfer_in_fmt, proc->b_state.s_time,
+    log_output( fd_event, log_transfer_in_fmt, get_lamport_time(),
             trans->s_dst, trans->s_amount, trans->s_src );
 }
