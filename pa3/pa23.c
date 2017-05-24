@@ -82,8 +82,7 @@ void children_routine ( proc_t* proc ) {
     // Close balance
     proc->b_state = proc->b_history.s_history[proc->b_history.s_history_len - 1];
     proc->b_state.s_time = get_lamport_time( );
-    proc->b_state.s_balance_pending_in = 0;
-    add_balance_state_to_history(&(proc->b_history), proc->b_state, get_lamport_time());
+    add_balance_state_to_history(&(proc->b_history), proc->b_state);
 
     log_done ( proc );
    

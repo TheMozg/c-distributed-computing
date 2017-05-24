@@ -22,9 +22,6 @@
 
 int send(void * self, local_id dst, const Message * msg) {
     proc_t * proc = self;
-
-    //fprintf(stderr, "T.%d, P.%d -> P.%d sent TS.%d\n", proc->b_state.s_time, proc->id,dst, msg->s_header.s_local_time);
-
     int status = write(proc->fd_writ[proc->id][dst], msg, sizeof(MessageHeader) + msg->s_header.s_payload_len);
     return (status != -1) ? 0 : -1;
 }
@@ -60,10 +57,8 @@ int receive(void * self, local_id from, Message * msg) {
     }
     if(status > 0){
         if (msg->s_header.s_local_time > proc->b_state.s_time)
-        l_time_cmp_set( msg->s_header.s_local_time );
+            l_time_cmp_set( msg->s_header.s_local_time );
         proc->b_state.s_time = get_inc_l_time( );
-        //printf("Lamp time %d %d\n", get_lamport_time(), proc->b_state.s_time);
-
     }
     return (status == -1 || status == 0) ? -1 : 0;
 }
