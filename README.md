@@ -1,6 +1,10 @@
 # Distributed Computing
 
-See "Projects" tab for TODOs and ideas.
+- PA1 - IPC based on Linux `pipe()`, `read()` and `write()` syscalls; Messaging protocol
+- PA2 - Transfering orders between bank accounts using physical clock
+- PA3 - Transfering orders between bank accounts using Lamport's logical clock
 
-- `watch.sh` -- for lab1
-- `env.sh` -- use as `source env.sh` for lab2
+# Usage
+Build: `make <assignment_dir>` to build assignment and package sources for remote testing
+
+Run: for `pa2` and `pa3` do `source env.sh`
